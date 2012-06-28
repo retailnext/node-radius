@@ -1,0 +1,11 @@
+# Aruba attributes
+VENDORATTR  14823       Aruba-User-Role                         1       string
+VENDORATTR  14823       Aruba-User-Vlan                         2       integer
+VENDORATTR  14823       Aruba-Priv-Admin-User                   3       integer
+VENDORATTR  14823       Aruba-Admin-Role                        4       string
+VENDORATTR  14823       Aruba-Essid-Name                        5       string
+VENDORATTR  14823       Aruba-Location-Id                       6       string
+VENDORATTR  14823       Aruba-Port-Id                           7       string
+VENDORATTR  14823       Aruba-Template-User                     8       string
+VENDORATTR  14823       Aruba-Named-User-Vlan                   9       string
+VENDORATTR  14823       Aruba-AP-Group                          10      string

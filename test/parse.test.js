@@ -17,6 +17,8 @@ module.exports = testCase({
   test_parse_mac_auth: function(test) {
     var raw_packet = fs.readFileSync(__dirname + '/captures/aruba_mac_auth.packet');
 
+    radius.load_dictionary(__dirname + '/dictionaries/dictionary.aruba');
+
     var parsed = radius.parse(raw_packet, secret);
 
     test.equal( 'Access-Request', parsed.code );
@@ -32,10 +34,12 @@ module.exports = testCase({
       'Calling-Station-Id': '7CC537FFF8AF',
       'Called-Station-Id': '000B86F02068',
       'Service-Type': 'Login-User',
-      'Message-Authenticator': new Buffer('f8a12329c7ed5a6e2568515243efb918', 'hex'),
-
-      // XXX parse me
-      'Vendor-Specific': new Buffer('000039e70a0a636c6f75642d6370', 'hex'),
+      'Vendor-Specific': {
+        'Aruba-Essid-Name': 'muir-aruba-guest',
+        'Aruba-Location-Id': '00:1a:1e:c6:b0:ca',
+        'Aruba-AP-Group': 'cloud-cp'
+      },
+      'Message-Authenticator': new Buffer('f8a12329c7ed5a6e2568515243efb918', 'hex')
     };
     test.deepEqual( expected_attrs, parsed.attributes );
 
