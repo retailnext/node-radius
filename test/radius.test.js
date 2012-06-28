@@ -4,7 +4,6 @@ var fs = require('fs');
 
 var secret = 'nearbuy';
 
-
 module.exports = testCase({
   setUp: function(callback) {
     radius.load_dictionaries();
@@ -74,10 +73,53 @@ module.exports = testCase({
       [26, new Buffer('000039e705126d7569722d61727562612d6775657374', 'hex')],
       [26, new Buffer('000039e7061330303a31613a31653a63363a62303a6361', 'hex')],
       [26, new Buffer('000039e70a0a636c6f75642d6370', 'hex')],
-      [80, new Buffer('f8a12329c7ed5a6e2568515243efb918', 'hex')],
+      [80, new Buffer('f8a12329c7ed5a6e2568515243efb918', 'hex')]
     ];
 
     test.deepEqual( expected_raw_attrs, parsed.raw_attributes );
+
+    test.done();
+  },
+
+  // can make a "naked" packet
+  test_encode_access_request: function(test) {
+    radius.load_dictionary(__dirname + '/dictionaries/dictionary.aruba');
+
+    var attributes = [
+      ['User-Name', 'ornithopter-aliptic'],
+      ['User-Password', 'nucleohistone-overwilily'],
+      ['Service-Type', 'Login-User'],
+      ['NAS-IP-Address', '169.134.68.136'],
+
+      ['Vendor-Specific', 14823, [
+        ['Aruba-User-Role', 'cracked-tylote'],
+        [2, 825]
+      ]],
+      ['Vendor-Specific', 14823, [['Aruba-Essid-Name', 'phene-dentinalgia']]]
+    ];
+    var packet = radius.encode({
+      code: 'Access-Request',
+      identifier: 123,
+      attributes: attributes,
+      secret: secret
+    });
+
+    var parsed = radius.parse(packet, secret);
+    test.equal( 'Access-Request', parsed.code );
+    test.equal( 123, parsed.identifier );
+
+    var expected_attrs = {
+      'User-Name': 'ornithopter-aliptic',
+      'User-Password': 'nucleohistone-overwilily',
+      'Service-Type': 'Login-User',
+      'NAS-IP-Address': '169.134.68.136',
+      'Vendor-Specific': {
+        'Aruba-User-Role': 'cracked-tylote',
+        'Aruba-User-Vlan': 825,
+        'Aruba-Essid-Name': 'phene-dentinalgia'
+      }
+    };
+    test.deepEqual( expected_attrs, parsed.attributes );
 
     test.done();
   }
