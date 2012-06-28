@@ -134,7 +134,7 @@ module.exports = testCase({
     var encoded = radius.encode({
       code: 'Access-Request',
       identifier: 58,
-      request_authenticator: new Buffer('4a45fae086d9e114286b37b5f371ec6c', 'hex'),
+      authenticator: new Buffer('4a45fae086d9e114286b37b5f371ec6c', 'hex'),
       attributes: [
         ['NAS-IP-Address', '10.0.0.90'],
         ['NAS-Port', 0],
@@ -176,6 +176,24 @@ module.exports = testCase({
     }
 
     test.ok( true );
+
+    test.done();
+  },
+
+  // given a previously decoded packet, prepare a response packet
+  test_packet_response: function(test) {
+    var raw_packet = fs.readFileSync(__dirname + '/captures/cisco_mac_auth.packet');
+
+    var decoded = radius.decode(raw_packet, secret);
+
+    var response = radius.encode_response(decoded, {
+      code: 'Access-Reject',
+      secret: secret
+    });
+
+    var raw_response = fs.readFileSync(__dirname + '/captures/cisco_mac_auth_reject.packet');
+    test.equal( raw_response.toString('hex'), response.toString('hex') );
+
     test.done();
   }
 
