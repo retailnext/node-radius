@@ -1,0 +1,9 @@
+# -*- text -*-
+#
+#	Attributes and values defined in RFC 4072
+#	http://www.ietf.org/rfc/4072.txt
+#
+#	$Id: dictionary.rfc4072 28946 2009-07-06 12:39:58Z wmeier $
+#
+
+ATTRIBUTE	EAP-Key-Name				102	string

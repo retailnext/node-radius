@@ -1,0 +1,11 @@
+# -*- text -*-
+##############################################################################
+#
+#	Attributes and values defined in RFC 4818.
+#	http://www.ietf.org/rfc/rfc4818.txt
+#
+#	$Id: dictionary.rfc4818 28946 2009-07-06 12:39:58Z wmeier $
+#
+##############################################################################
+
+ATTRIBUTE	Delegated-IPv6-Prefix			123	ipv6prefix

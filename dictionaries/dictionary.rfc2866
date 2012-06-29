@@ -3,7 +3,7 @@
 #	Attributes and values defined in RFC 2866.
 #	http://www.ietf.org/rfc/rfc2866.txt
 #
-#	$Id$
+#	$Id: dictionary.rfc2866 39598 2011-10-26 05:33:30Z etxrab $
 #
 ATTRIBUTE	Acct-Status-Type			40	integer
 ATTRIBUTE	Acct-Delay-Time				41	integer
@@ -22,7 +22,6 @@ ATTRIBUTE	Acct-Link-Count				51	integer
 
 VALUE	Acct-Status-Type		Start			1
 VALUE	Acct-Status-Type		Stop			2
-VALUE	Acct-Status-Type		Alive			3   # dup
 VALUE	Acct-Status-Type		Interim-Update		3
 VALUE	Acct-Status-Type		Accounting-On		7
 VALUE	Acct-Status-Type		Accounting-Off		8
