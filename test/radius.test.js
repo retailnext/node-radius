@@ -160,7 +160,8 @@ module.exports = testCase({
   // encode will choose a random identifier for you if you don't provide one
   test_encode_random_identifer: function(test) {
     var decoded = radius.decode(radius.encode({
-      code: 'Access-Request'
+      code: 'Access-Request',
+      secret: secret
     }));
     test.ok( decoded.identifier >= 0 && decoded.identifier < 256 );
 
@@ -169,7 +170,8 @@ module.exports = testCase({
     // if you are unlucky this is an infinite loop
     while (true) {
       decoded = radius.decode(radius.encode({
-        code: 'Access-Request'
+        code: 'Access-Request',
+        secret: secret
       }));
       if (decoded.identifier != starting_id)
         break;
@@ -235,6 +237,69 @@ module.exports = testCase({
     }), secret);
 
     test.equal( decoded.attributes['User-Password'], 'ridiculous' );
+
+    test.done();
+  },
+
+  test_accounting: function(test) {
+    radius.load_dictionary(__dirname + '/dictionaries/dictionary.airespace');
+
+    var raw_acct_request = fs.readFileSync(__dirname + '/captures/cisco_accounting.packet');
+
+    var decoded = radius.decode(raw_acct_request, secret);
+
+    var expected_attrs = {
+      'User-Name': 'user_7C:C5:37:FF:F8:AF_134',
+	    'NAS-Port': 1,
+	    'NAS-IP-Address': '10.0.3.4',
+      'Framed-IP-Address': '10.2.0.252',
+      'NAS-Identifier': 'Cisco 4400 (Anchor)',
+      'Vendor-Specific': {
+        'Airespace-Wlan-Id': 2
+      },
+      'Acct-Session-Id': '4fecc41e/7c:c5:37:ff:f8:af/9',
+      'Acct-Authentic': 'RADIUS',
+      'Tunnel-Type': [0x00, 'VLAN'],
+      'Tunnel-Medium-Type': [0x00, 'IEEE-802'],
+      'Tunnel-Private-Group-Id': 5,
+      'Acct-Status-Type': 'Start',
+      'Calling-Station-Id': '7c:c5:37:ff:f8:af',
+      'Called-Station-Id': '00:22:55:90:39:60'
+    };
+
+    test.deepEqual( expected_attrs, decoded.attributes );
+
+    // test we can encode the same packet
+    var encoded = radius.encode({
+      code: 'Accounting-Request',
+      identifier: decoded.identifier,
+      secret: secret,
+      attributes: [
+       	['User-Name', 'user_7C:C5:37:FF:F8:AF_134'],
+	      ['NAS-Port', 1],
+	      ['NAS-IP-Address', '10.0.3.4'],
+        ['Framed-IP-Address', '10.2.0.252'],
+        ['NAS-Identifier', 'Cisco 4400 (Anchor)'],
+        ['Vendor-Specific', 'Airespace', [['Airespace-Wlan-Id', 2]]],
+        ['Acct-Session-Id', '4fecc41e/7c:c5:37:ff:f8:af/9'],
+        ['Acct-Authentic', 'RADIUS'],
+        ['Tunnel-Type', 0x00, 'VLAN'],
+        ['Tunnel-Medium-Type', 0x00, 'IEEE-802'],
+        ['Tunnel-Private-Group-Id', '5'],
+        ['Acct-Status-Type', 'Start'],
+        ['Calling-Station-Id', '7c:c5:37:ff:f8:af'],
+        ['Called-Station-Id', '00:22:55:90:39:60']
+      ]
+    });
+    test.equal( encoded.toString('hex'), raw_acct_request.toString('hex') );
+
+    var raw_acct_response = fs.readFileSync(__dirname +
+                                            '/captures/cisco_accounting_response.packet');
+    encoded = radius.encode_response(decoded, {
+      secret: secret,
+      code: 'Accounting-Response'
+    });
+    test.equal( encoded.toString('hex'), raw_acct_response.toString('hex') );
 
     test.done();
   }
