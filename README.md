@@ -49,7 +49,7 @@ To prepare a stand-alone packet, try this:
 
 Method descriptions:
 
-radius.decode(<packet>, <shared secret>)
+radius.decode(\<packet>, \<shared secret>)
 
 Decode takes as input the raw UDP RADIUS packet (as a Buffer) and the RADIUS shared secret. Using the dictionaries available, decode parses the packet and returns an object representation of the packet. The object has the following fields:
 
@@ -60,7 +60,7 @@ Decode takes as input the raw UDP RADIUS packet (as a Buffer) and the RADIUS sha
 - raw_attributes: an array of arrays containing each raw attribute (attribute type and a Buffer containing the attribute value). This is mainly used by the library for generating the response packet, and would only be useful to you if you are missing relevant dictionaries and want to decode attributes yourself.
 
 
-radius.encode(<args>)
+radius.encode(\<args>)
 
 Encode takes a hash of arguments and returns a Buffer ready to be sent over the wire. The accepted arguments are:
 
@@ -104,7 +104,7 @@ Or if you want each vendor attribute as a separate attribute, try this:
       ...
     ]
 
-Like regular attributes, you can also specify the attribute id and a raw Buffer value for VSAs. If your dictionary specifies vendor attributes using the BEGIN-VENDOR/END-VENDOR format, you can use the symbolic vendor name as defined in the dictionary in place of the numeric <vendor id>.
+Like regular attributes, you can also specify the attribute id and a raw Buffer value for VSAs. If your dictionary specifies vendor attributes using the BEGIN-VENDOR/END-VENDOR format, you can use the symbolic vendor name as defined in the dictionary in place of the numeric \<vendor id>.
 
 You can specify the tag field-attribute like so (see RFC2868) :
 
