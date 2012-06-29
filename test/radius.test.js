@@ -6,7 +6,6 @@ var secret = 'nearbuy';
 
 module.exports = testCase({
   setUp: function(callback) {
-    radius.load_dictionaries();
     callback();
   },
   tearDown: function(callback) {
@@ -51,6 +50,8 @@ module.exports = testCase({
     var raw_packet = fs.readFileSync(__dirname + '/captures/aruba_mac_auth.packet');
 
     radius.unload_dictionaries();
+    var orig_load = radius.load_dictionary;
+    radius.load_dictionary = function() { };
 
     var decoded = radius.decode(raw_packet, secret);
 
@@ -77,6 +78,8 @@ module.exports = testCase({
     ];
 
     test.deepEqual( expected_raw_attrs, decoded.raw_attributes );
+
+    radius.load_dictionary = orig_load;
 
     test.done();
   },
