@@ -195,6 +195,47 @@ module.exports = testCase({
     test.equal( raw_response.toString('hex'), response.toString('hex') );
 
     test.done();
-  }
+  },
 
+  // response needs to include proxy state
+  test_response_include_proxy_state: function(test) {
+    var request_with_proxy = radius.decode(radius.encode({
+      code: 'Access-Request',
+      secret: secret,
+      attributes: [
+        ['User-Name', 'ascribe-despairer'],
+        ['Proxy-State', new Buffer('womanhouse-Pseudotsuga')],
+        ['User-Password', 'ridiculous'],
+        ['Proxy-State', new Buffer('regretfully-unstability')]
+      ]
+    }), secret);
+
+    var decoded_response = radius.decode(radius.encode_response(request_with_proxy, {
+      code: 'Access-Reject',
+      secret: secret
+    }));
+
+    var expected_raw_attributes = [
+      [radius.attr_name_to_id('Proxy-State'), new Buffer('womanhouse-Pseudotsuga')],
+      [radius.attr_name_to_id('Proxy-State'), new Buffer('regretfully-unstability')]
+    ];
+
+    test.deepEqual( expected_raw_attributes, decoded_response.raw_attributes );
+
+    test.done();
+  },
+
+  // dont accidentally strip null bytes when encoding
+  test_password_encode: function(test) {
+    var decoded = radius.decode(radius.encode({
+      code: 'Access-Request',
+      authenticator: new Buffer('426edca213c1bf6e005e90a64105ca3a', 'hex'),
+      attributes: [['User-Password', 'ridiculous']],
+      secret: secret
+    }), secret);
+
+    test.equal( decoded.attributes['User-Password'], 'ridiculous' );
+
+    test.done();
+  }
 });
