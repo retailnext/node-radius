@@ -113,10 +113,10 @@ You can specify the tag field-attribute like so (see RFC2868) :
       ...
     ]
 
-If the attribute has an optional tag and you don't want to send it, then only specify the <attribute name> and the <attribute value>.
+If the attribute has an optional tag and you don't want to send it, then only specify the \<attribute name> and the \<attribute value>.
 
 
-radius.encode\_response(<decoded packet>, <args>)
+radius.encode\_response(\<decoded packet>, \<args>)
 
 Encode_response prepares a response packet based on previously received packet. <decoded packet> is the output of a previous call to radius.decode. <args> is a hash similar to what encode takes:
 
@@ -125,6 +125,7 @@ Encode_response prepares a response packet based on previously received packet. 
 - attributes (optional): RADIUS attributes you want to add to the packet
 
 Encode_response does a few things for you to prepare the response:
+
 1. sets your message identifier to the identifer of the previously received packet
 1. copies any "Proxy-State" attributes from the previously received packet
 1. calculates the appropriate response authenticator
@@ -145,8 +146,9 @@ add\_dictionary takes either a file or a directory (given a directory, it assume
 node-radius supports reading both the VENDORATTR and the BEGIN-VENDOR/END-VENDOR style for defining VSAs. node-radius also supports reading the following attribute modifiers: has_tag, encrypt=1.
 
 Here are a few things that node-radius does not yet support:
- - non-standard VSAs (where type or length field for attributes are not one octet each)
- - decoding/encoding the following attribute types: date, ipv6addr, ifid, ipv6prefix, short. If it encounters a type it doesn't support, node-radius will return a raw Buffer when decoding, and expect a Buffer when encoding.
- - asynchronous interface for encoding/decoding (the only things that necessitate this are loading the dictionary files and generating the seed for the random 16 octet authenticator using openssl, both of which only happen once)
+- non-standard VSAs (where type or length field for attributes are not one octet each)
+- decoding/encoding the following attribute types: date, ipv6addr, ifid, ipv6prefix, short. If it encounters a type it doesn't support, node-radius will return a raw Buffer when decoding, and expect a Buffer when encoding.
+- asynchronous interface for encoding/decoding (the only things that necessitate this are loading the dictionary files and generating the seed for the random 16 octet authenticator using openssl, both of which only happen once)
+- Tunnel-Password encryption/decryption (and any other encryption types other than that defined by RFC2865 for User-Password
 
 But on the plus-side, unlike many other RADIUS libraries, node-radius supports encrypting/decrypting passwords longer than 16 bytes!
