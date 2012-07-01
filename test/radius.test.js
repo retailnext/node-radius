@@ -381,5 +381,21 @@ module.exports = testCase({
       attributes: [['Reply-Message', 'unstrangulable-theoretical']],
       callback: encode_response_cb
     });
+  },
+
+  test_no_empty_strings: function(test) {
+    var decoded = radius.decode({
+      secret: secret,
+      packet: radius.encode({
+        code: 'Access-Request',
+        attributes: [['User-Name', '']],
+        secret: secret
+      })
+    });
+
+    // don't send empty strings (see RFC2865)
+    test.deepEqual( {}, decoded.attributes );
+
+    test.done();
   }
 });
