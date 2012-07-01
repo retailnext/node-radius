@@ -63,7 +63,7 @@ Using the dictionaries available, decode parses the raw packet and yields an obj
 - code: string representation of the packet code ("Access-Request", "Accounting-Response", etc)
 - identifier: packet identifier number (used for duplicate packet detection)
 - length: RADIUS packet length
-- attributes: a hash containing all attributes the library knew how to parse
+- attributes: a hash containing all attributes the library knew how to parse. If an attribute is repeated, its value in the "attributes" hash will become an Array containing each value. Unfortunately the dictionary files do not specify which attributes are repeatable, so if an attribute might be repeated then you need to check if the value in "attributes" is a scalar value or an Array.
 - raw_attributes: an array of arrays containing each raw attribute (attribute type and a Buffer containing the attribute value). This is mainly used by the library for generating the response packet, and would only be useful to you if you are missing relevant dictionaries and want to decode attributes yourself.
 
 Here is an example using the asynchronous interface to decode a packet:
@@ -180,10 +180,13 @@ add\_dictionary takes either a file or a directory (given a directory, it assume
 
 node-radius supports reading both the VENDORATTR and the BEGIN-VENDOR/END-VENDOR style for defining VSAs. node-radius also supports reading the following attribute modifiers: has_tag, encrypt=1.
 
+node-radius will also follow "$INCLUDE" directives inside of dictionary files (to load other dictionary files).
+
 ## Important notes:
 
 - node-radius in general does _not_ perform "higher-level" protocol validation, so for example node-radius will not complain if you encode an Access-Request packet but fail to include a NAS-IP-Address or NAS-Identifier.
-- node-radius does not perform any potentially blocking operations except for two one-time events: loading the dictionaries the first time they are needed, and generating a random message authenticator for the first time. If you find the synchronous interface convenient, go ahead and use it. The asynchronous interface is there if you really really never want to block, not even just once on startup.
+- node-radius does not perform any potentially blocking operations except for two one-time actions: loading the dictionaries the first time they are needed, and generating a random message authenticator for the first time. If you find the synchronous interface convenient, go ahead and use it. The asynchronous interface is there if you really really never want to block, not even just once on startup.
+- node-radius in general assumes most strings are UTF-8 encoded. This will work fine for ASCII and UTF-8 strings, but will not work for other encodings. At some point I might add an "encoding" option to override this default encoding, and/or a "raw" mode that just deals with Buffers (rather than Strings) when the encoding is not known.
 - node-radius does not support non-standard VSAs (where type or length field for attributes are not one octet each).
 - node-radius does not support decoding/encoding the following attribute types: date, ipv6addr, ifid, ipv6prefix, short. If it encounters a type it doesn't support, node-radius will return a raw Buffer when decoding, and expect a Buffer when encoding.
 - node-radius does not support Tunnel-Password encryption/decryption (and any other encryption types other than that defined by RFC2865 for User-Password).
