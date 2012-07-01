@@ -142,7 +142,7 @@ Here is an example using the asynchronous interface, sending the encoded packet 
       attributes: [
         ['NAS-Identifier', 'DS9'],
         ['User-Name', 'Quark'],
-        ['User-Password', 'profit'],
+        ['User-Password', 'profit']
       ],
       callback: function(err, encoded) {
         if (err) throw err;
@@ -153,12 +153,12 @@ Here is an example using the asynchronous interface, sending the encoded packet 
 
 **radius.encode\_response(\<args>)**
 
-encode_response prepares a response packet based on previously received and decoded packet. "args" is a has with the following properties:
+encode_response prepares a response packet based on previously received and decoded packet. "args" is a hash with the following properties:
 
 - packet (required): the output of a previous call to radius.decode
 - code (required): String representation of the packet code ("Access-Reject, "Accounting-Response", etc)
 - attributes (optional): RADIUS attributes you want to add to the packet
-- callback (optional): if provided, encode_response will operate asynchronously. The first argument to the callback will be an error, if any, and the second argument will be the encoded packet. If callback is not provided, encod\_response will return the encoded packet synchronously. See the note on asynchronicity near the end of this README.
+- callback (optional): if provided, encode_response will operate asynchronously. The first argument to the callback will be an error, if any, and the second argument will be the encoded packet. If callback is not provided, encode\_response will return the encoded packet synchronously. See the note on asynchronicity near the end of this README.
 
 encode_response does a few things for you to prepare the response:
 
