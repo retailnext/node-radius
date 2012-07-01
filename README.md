@@ -1,4 +1,4 @@
-node-radius is a RADIUS packet encoding/decoding library for node.js written in Javascript. With node-radius you can easily decode received packets, encode packets to send, and prepare responses to received packets.
+node-radius is a RADIUS packet encoding/decoding library for node.js written in Javascript. With node-radius you can easily decode received packets, encode packets to send, and prepare responses to received packets. Note that node-radius in general does _not_ perform "higher-level" protocol validation, so for example node-radius will not complain if you encode an Access-Request packet but fail to include a NAS-IP-Address or NAS-Identifier.
 
 node-radius requires node.js v0.8.0. To install node-radius, clone this project, then change to the directory you want to install it in and run `npm install /path/to/cloned/node-radius`. It should be in npm soon, which will make installation easier.
 

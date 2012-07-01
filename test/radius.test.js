@@ -18,7 +18,7 @@ module.exports = testCase({
 
     radius.load_dictionary(__dirname + '/dictionaries/dictionary.aruba');
 
-    var decoded = radius.decode(raw_packet, secret);
+    var decoded = radius.decode({ packet: raw_packet, secret: secret });
 
     test.equal( 'Access-Request', decoded.code );
     test.equal( 58, decoded.identifier );
@@ -53,7 +53,7 @@ module.exports = testCase({
     var orig_load = radius.load_dictionary;
     radius.load_dictionary = function() { };
 
-    var decoded = radius.decode(raw_packet, secret);
+    var decoded = radius.decode({ packet: raw_packet, secret: secret });
 
     test.equal( 'Access-Request', decoded.code );
     test.equal( 58, decoded.identifier );
@@ -107,7 +107,7 @@ module.exports = testCase({
       secret: secret
     });
 
-    var decoded = radius.decode(packet, secret);
+    var decoded = radius.decode({ packet: packet, secret: secret });
     test.equal( 'Access-Request', decoded.code );
     test.equal( 123, decoded.identifier );
 
@@ -162,20 +162,26 @@ module.exports = testCase({
 
   // encode will choose a random identifier for you if you don't provide one
   test_encode_random_identifer: function(test) {
-    var decoded = radius.decode(radius.encode({
-      code: 'Access-Request',
+    var decoded = radius.decode({
+      packet: radius.encode({
+        code: 'Access-Request',
+        secret: secret
+      }),
       secret: secret
-    }));
+    });
     test.ok( decoded.identifier >= 0 && decoded.identifier < 256 );
 
     var starting_id = decoded.identifier;
 
     // if you are unlucky this is an infinite loop
     while (true) {
-      decoded = radius.decode(radius.encode({
-        code: 'Access-Request',
+      decoded = radius.decode({
+        packet: radius.encode({
+          code: 'Access-Request',
+          secret: secret
+        }),
         secret: secret
-      }));
+      });
       if (decoded.identifier != starting_id)
         break;
     }
@@ -189,9 +195,10 @@ module.exports = testCase({
   test_packet_response: function(test) {
     var raw_packet = fs.readFileSync(__dirname + '/captures/cisco_mac_auth.packet');
 
-    var decoded = radius.decode(raw_packet, secret);
+    var decoded = radius.decode({ packet: raw_packet, secret: secret });
 
-    var response = radius.encode_response(decoded, {
+    var response = radius.encode_response({
+      packet: decoded,
       code: 'Access-Reject',
       secret: secret
     });
@@ -204,21 +211,28 @@ module.exports = testCase({
 
   // response needs to include proxy state
   test_response_include_proxy_state: function(test) {
-    var request_with_proxy = radius.decode(radius.encode({
-      code: 'Access-Request',
-      secret: secret,
-      attributes: [
-        ['User-Name', 'ascribe-despairer'],
-        ['Proxy-State', new Buffer('womanhouse-Pseudotsuga')],
-        ['User-Password', 'ridiculous'],
-        ['Proxy-State', new Buffer('regretfully-unstability')]
-      ]
-    }), secret);
-
-    var decoded_response = radius.decode(radius.encode_response(request_with_proxy, {
-      code: 'Access-Reject',
+    var request_with_proxy = radius.decode({
+      packet: radius.encode({
+        code: 'Access-Request',
+        secret: secret,
+        attributes: [
+          ['User-Name', 'ascribe-despairer'],
+          ['Proxy-State', new Buffer('womanhouse-Pseudotsuga')],
+          ['User-Password', 'ridiculous'],
+          ['Proxy-State', new Buffer('regretfully-unstability')]
+        ]
+      }),
       secret: secret
-    }));
+    });
+
+    var decoded_response = radius.decode({
+      packet: radius.encode_response({
+        packet: request_with_proxy,
+        code: 'Access-Reject',
+        secret: secret
+      }),
+      secret: secret
+    });
 
     var expected_raw_attributes = [
       [radius.attr_name_to_id('Proxy-State'), new Buffer('womanhouse-Pseudotsuga')],
@@ -232,12 +246,15 @@ module.exports = testCase({
 
   // dont accidentally strip null bytes when encoding
   test_password_encode: function(test) {
-    var decoded = radius.decode(radius.encode({
-      code: 'Access-Request',
-      authenticator: new Buffer('426edca213c1bf6e005e90a64105ca3a', 'hex'),
-      attributes: [['User-Password', 'ridiculous']],
+    var decoded = radius.decode({
+      packet: radius.encode({
+        code: 'Access-Request',
+        authenticator: new Buffer('426edca213c1bf6e005e90a64105ca3a', 'hex'),
+        attributes: [['User-Password', 'ridiculous']],
+        secret: secret
+      }),
       secret: secret
-    }), secret);
+    });
 
     test.equal( decoded.attributes['User-Password'], 'ridiculous' );
 
@@ -249,7 +266,7 @@ module.exports = testCase({
 
     var raw_acct_request = fs.readFileSync(__dirname + '/captures/cisco_accounting.packet');
 
-    var decoded = radius.decode(raw_acct_request, secret);
+    var decoded = radius.decode({ packet: raw_acct_request, secret: secret });
 
     var expected_attrs = {
       'User-Name': 'user_7C:C5:37:FF:F8:AF_134',
@@ -298,12 +315,71 @@ module.exports = testCase({
 
     var raw_acct_response = fs.readFileSync(__dirname +
                                             '/captures/cisco_accounting_response.packet');
-    encoded = radius.encode_response(decoded, {
+    encoded = radius.encode_response({
+      packet: decoded,
       secret: secret,
       code: 'Accounting-Response'
     });
     test.equal( encoded.toString('hex'), raw_acct_response.toString('hex') );
 
     test.done();
+  },
+
+  test_async_encode_decode: function(test) {
+    var decode_callback = function(err, decoded) {
+      test.ok( !err );
+
+      test.equal( 187, decoded.identifier );
+      test.equal( 'Access-Accept', decoded.code );
+      test.equal( 'Eurypterida-lactucerin', decoded.attributes['User-Name'] );
+
+      test.done();
+    };
+    var encode_callback = function(err, encoded) {
+      test.ok( !err );
+
+      radius.decode({ packet: encoded, secret: secret, callback: decode_callback });
+    };
+
+    radius.encode({
+      code: 'Access-Accept',
+      secret: secret,
+      identifier: 187,
+      attributes: [['User-Name', 'Eurypterida-lactucerin']],
+      callback: encode_callback
+    });
+  },
+
+  test_async_encode_response: function(test) {
+    var decoded = radius.decode({
+      packet: radius.encode({
+        code: 'Access-Request',
+        secret: secret,
+        attributes: [
+          ['User-Name', 'Italian-impale'],
+          ['User-Password', 'iambus-nondecision']
+        ]
+      }),
+      secret: secret
+    });
+
+    radius.unload_dictionaries();
+    var encode_response_cb = function(err, response) {
+      test.ok( !err );
+
+      var decoded_resp = radius.decode({ packet: response, secret: secret });
+      test.equal( 'Access-Reject', decoded_resp.code );
+      test.equal( 'unstrangulable-theoretical', decoded_resp.attributes['Reply-Message'] );
+
+      test.done();
+    };
+
+    radius.encode_response({
+      code: 'Access-Reject',
+      packet: decoded,
+      secret: secret,
+      attributes: [['Reply-Message', 'unstrangulable-theoretical']],
+      callback: encode_response_cb
+    });
   }
 });
