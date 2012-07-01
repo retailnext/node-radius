@@ -1,4 +1,4 @@
-node-radius is a RADIUS packet encoding/decoding library for node.js written in Javascript. With node-radius you can easily decode received packets, encode packets to send, and prepare responses to received packets. node-radius supports both RADIUS authentication and RADIUS accounting packets.
+node-radius is a RADIUS packet encoding/decoding library for node.js written in Javascript. With node-radius you can easily decode received packets, encode packets to send, and prepare responses to received packets. node-radius supports both RADIUS authentication and RADIUS accounting packets. node-radius is designed to be fast and simple, providing both a synchronous and a callback-style asynchronous interface.
 
 node-radius requires node.js v0.8.0. To install node-radius, clone this project, then change to the directory you want to install it in and run `npm install /path/to/cloned/node-radius`. It should be in npm soon, which will make installation easier.
 
@@ -50,7 +50,7 @@ To prepare a stand-alone packet, try this:
 
 ## Method descriptions:
 
-**radius.decode(\<args>)**
+### radius.decode(\<args>)
 
 decode takes as input a hash of args:
 
@@ -63,8 +63,8 @@ Using the dictionaries available, decode parses the raw packet and yields an obj
 - code: string representation of the packet code ("Access-Request", "Accounting-Response", etc)
 - identifier: packet identifier number (used for duplicate packet detection)
 - length: RADIUS packet length
-- attributes: a hash containing all attributes the library knew how to parse. If an attribute is repeated, its value in the "attributes" hash will become an Array containing each value. Unfortunately the dictionary files do not specify which attributes are repeatable, so if an attribute might be repeated then you need to check if the value in "attributes" is a scalar value or an Array.
-- raw_attributes: an array of arrays containing each raw attribute (attribute type and a Buffer containing the attribute value). This is mainly used by the library for generating the response packet, and would only be useful to you if you are missing relevant dictionaries and want to decode attributes yourself.
+- attributes: a hash containing all attributes node-radius knew how to parse. If an attribute is repeated, its value in the "attributes" hash will become an Array containing each value. Unfortunately the dictionary files do not specify which attributes are repeatable, so if an attribute might be repeated then you need to check if the value in "attributes" is a scalar value or an Array.
+- raw_attributes: an array of arrays containing each raw attribute (attribute type and a Buffer containing the attribute value). This is mainly used by node-radius for generating the response packet, and would only be useful to you if you are missing relevant dictionaries and/or want to decode attributes yourself.
 
 Here is an example using the asynchronous interface to decode a packet:
 
@@ -78,7 +78,7 @@ Here is an example using the asynchronous interface to decode a packet:
       }
     });
 
-**radius.encode(\<args>)**
+### radius.encode(\<args>)
 
 encode takes a hash of arguments and returns a Buffer ready to be sent over the wire. The accepted arguments are:
 
@@ -151,7 +151,7 @@ Here is an example using the asynchronous interface, sending the encoded packet 
     });
 
 
-**radius.encode\_response(\<args>)**
+### radius.encode\_response(\<args>)
 
 encode_response prepares a response packet based on previously received and decoded packet. "args" is a hash with the following properties:
 
@@ -169,6 +169,8 @@ encode_response does a few things for you to prepare the response:
 ## Dictionaries
 
 node-radius supports reading freeradius-style RADIUS dictionary files. node-radius comes with a slew of RFC dictionary files, so you should only worry about adding any vendor-specific dictionary files you have. node-radius will load all the dictionaries it knows about (the default RFC ones and any you added) automatically the first time it needs to, so you should add your dictionaries before you start to use the module.
+
+### radius.add_dictionary(\<path>)
 
 To add a dictionary to be loaded, use the **add_dictionary** function:
 
