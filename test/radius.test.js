@@ -397,5 +397,26 @@ module.exports = testCase({
     test.deepEqual( {}, decoded.attributes );
 
     test.done();
+  },
+
+  test_repeated_attribute: function(test) {
+    var decoded = radius.decode({
+      secret: secret,
+      packet: radius.encode({
+        secret: secret,
+        code: 'Access-Reject',
+        attributes: [
+          ['Reply-Message', 'message one'],
+          ['Reply-Message', 'message two']
+        ]
+      })
+    });
+
+    var expected_attrs = {
+      'Reply-Message': ['message one', 'message two']
+    };
+    test.deepEqual( expected_attrs, decoded.attributes );
+
+    test.done();
   }
 });
