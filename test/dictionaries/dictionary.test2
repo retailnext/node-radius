@@ -1,0 +1,4 @@
+ATTRIBUTE Attribute-Test2 245 string
+
+# don't do anything crazy like loop forever
+$INCLUDE dictionary.test1
