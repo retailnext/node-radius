@@ -1,6 +1,6 @@
 node-radius is a RADIUS packet encoding/decoding library for node.js written in Javascript. With node-radius you can easily decode received packets, encode packets to send, and prepare responses to received packets. node-radius supports both RADIUS authentication and RADIUS accounting packets. node-radius is designed to be fast and simple, providing both a synchronous and a callback-style asynchronous interface.
 
-node-radius requires node.js v0.8.0. To install node-radius, just simply run `npm install radius` in your project directory.
+node-radius requires node.js v0.8.0. To install node-radius, simply run `npm install radius` in your project directory.
 
 Let's look at some examples of how to use node-radius:
 
@@ -96,7 +96,7 @@ The attributes will typically be like the following (see above example):
       ...
     ]
 
-If you want to send attributes that you haven't loaded a dictonary for, you can do:
+If you want to send attributes that you haven't loaded a dictionary for, you can do:
 
     attributes: [
       [<attribute id>, <Buffer>],
