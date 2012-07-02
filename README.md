@@ -190,7 +190,7 @@ node-radius will also follow "$INCLUDE" directives inside of dictionary files (t
 - node-radius does not perform any potentially blocking operations except for two one-time actions: loading the dictionaries the first time they are needed, and generating a random message authenticator for the first time. If you find the synchronous interface convenient, go ahead and use it. The asynchronous interface is there if you really really never want to block, not even just once on startup.
 - node-radius in general assumes most strings are UTF-8 encoded. This will work fine for ASCII and UTF-8 strings, but will not work for other encodings. At some point I might add an "encoding" option to override this default encoding, and/or a "raw" mode that just deals with Buffers (rather than Strings) when the encoding is not known.
 - node-radius does not support non-standard VSAs (where type or length field for attributes are not one octet each).
-- node-radius does not support special decoding/encoding the following attribute types: date, ipv6addr, ifid, ipv6prefix, short. If node-radius encounters a type it doesn't support, node-radius will return a raw Buffer when decoding, and expect a Buffer when encoding.
+- node-radius does not support special decoding/encoding for the following attribute types: date, ipv6addr, ifid, ipv6prefix, short. If node-radius encounters a type it doesn't support, node-radius will return a raw Buffer when decoding, and expect a Buffer when encoding.
 - node-radius does not support Tunnel-Password encryption/decryption (and any other encryption types other than that defined by RFC2865 for User-Password).
 
 But, on the plus-side, unlike many other RADIUS libraries node-radius supports encrypting/decrypting passwords longer than 16 bytes!
