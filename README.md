@@ -1,6 +1,6 @@
 node-radius is a RADIUS packet encoding/decoding library for node.js written in Javascript. With node-radius you can easily decode received packets, encode packets to send, and prepare responses to received packets. node-radius supports both RADIUS authentication and RADIUS accounting packets. node-radius is designed to be fast and simple, providing both a synchronous and a callback-style asynchronous interface.
 
-node-radius requires node.js v0.8.0. To install node-radius, clone this project, then change to the directory you want to install it in and run `npm install /path/to/cloned/node-radius`. It should be in npm soon, which will make installation easier.
+node-radius requires node.js v0.8.0. To install node-radius, just simply run `npm install radius` in your project directory.
 
 Let's look at some examples of how to use node-radius:
 
@@ -190,7 +190,7 @@ node-radius will also follow "$INCLUDE" directives inside of dictionary files (t
 - node-radius does not perform any potentially blocking operations except for two one-time actions: loading the dictionaries the first time they are needed, and generating a random message authenticator for the first time. If you find the synchronous interface convenient, go ahead and use it. The asynchronous interface is there if you really really never want to block, not even just once on startup.
 - node-radius in general assumes most strings are UTF-8 encoded. This will work fine for ASCII and UTF-8 strings, but will not work for other encodings. At some point I might add an "encoding" option to override this default encoding, and/or a "raw" mode that just deals with Buffers (rather than Strings) when the encoding is not known.
 - node-radius does not support non-standard VSAs (where type or length field for attributes are not one octet each).
-- node-radius does not support decoding/encoding the following attribute types: date, ipv6addr, ifid, ipv6prefix, short. If it encounters a type it doesn't support, node-radius will return a raw Buffer when decoding, and expect a Buffer when encoding.
+- node-radius does not support special decoding/encoding the following attribute types: date, ipv6addr, ifid, ipv6prefix, short. If node-radius encounters a type it doesn't support, node-radius will return a raw Buffer when decoding, and expect a Buffer when encoding.
 - node-radius does not support Tunnel-Password encryption/decryption (and any other encryption types other than that defined by RFC2865 for User-Password).
 
 But, on the plus-side, unlike many other RADIUS libraries node-radius supports encrypting/decrypting passwords longer than 16 bytes!
