@@ -461,5 +461,36 @@ module.exports = testCase({
       attributes: [['Attribute-Test1', 'foo'], ['Attribute-Test2', 'bar']],
       callback: encode_callback
     });
+  },
+
+  // make sure we can load the dicts in any order
+  test_dictionary_out_of_order: function(test) {
+    var dicts = fs.readdirSync('../dictionaries');
+
+    // make sure we can load any dictionary first
+    for (var i = 0; i < dicts.length; i++) {
+      radius.unload_dictionaries();
+      radius.load_dictionary('../dictionaries/' + dicts[i]);
+    }
+
+    // and spot check things actually work loaded out of order
+    radius.unload_dictionaries();
+    radius.load_dictionary('../dictionaries/dictionary.rfc2867');
+    radius.load_dictionary('../dictionaries/dictionary.rfc2866');
+
+    var decoded = radius.decode({
+      secret: secret,
+      packet: radius.encode({
+        code: 'Accounting-Request',
+        secret: secret,
+        attributes: [
+         ['Acct-Status-Type', 'Tunnel-Reject']
+        ]
+      })
+    });
+
+    test.equal( 'Tunnel-Reject', decoded.attributes['Acct-Status-Type'] );
+
+    test.done();
   }
 });
