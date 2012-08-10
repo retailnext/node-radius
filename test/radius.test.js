@@ -492,5 +492,19 @@ module.exports = testCase({
     test.equal( 'Tunnel-Reject', decoded.attributes['Acct-Status-Type'] );
 
     test.done();
+  },
+
+  test_zero_identifer: function(test) {
+    var decoded = radius.decode({
+      packet: radius.encode({
+        secret: secret,
+        code: 'Access-Request',
+        identifier: 0
+      }),
+      secret: secret
+    });
+
+    test.equal( 0, decoded.identifier );
+    test.done();
   }
 });
