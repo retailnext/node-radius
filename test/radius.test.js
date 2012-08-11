@@ -422,7 +422,7 @@ module.exports = testCase({
 
   test_dictionary_include: function(test) {
     radius.unload_dictionaries();
-    radius.add_dictionary('dictionaries/dictionary.test1');
+    radius.add_dictionary(__dirname + '/dictionaries/dictionary.test1');
 
     var decoded = radius.decode({
       secret: secret,
@@ -465,18 +465,18 @@ module.exports = testCase({
 
   // make sure we can load the dicts in any order
   test_dictionary_out_of_order: function(test) {
-    var dicts = fs.readdirSync('../dictionaries');
+    var dicts = fs.readdirSync(__dirname + '/../dictionaries');
 
     // make sure we can load any dictionary first
     for (var i = 0; i < dicts.length; i++) {
       radius.unload_dictionaries();
-      radius.load_dictionary('../dictionaries/' + dicts[i]);
+      radius.load_dictionary(__dirname + '/../dictionaries/' + dicts[i]);
     }
 
     // and spot check things actually work loaded out of order
     radius.unload_dictionaries();
-    radius.load_dictionary('../dictionaries/dictionary.rfc2867');
-    radius.load_dictionary('../dictionaries/dictionary.rfc2866');
+    radius.load_dictionary(__dirname + '/../dictionaries/dictionary.rfc2867');
+    radius.load_dictionary(__dirname + '/../dictionaries/dictionary.rfc2866');
 
     var decoded = radius.decode({
       secret: secret,
