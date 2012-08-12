@@ -491,6 +491,24 @@ module.exports = testCase({
 
     test.equal( 'Tunnel-Reject', decoded.attributes['Acct-Status-Type'] );
 
+    radius.unload_dictionaries();
+    radius.load_dictionary(__dirname + '/dictionaries/dictionary.test_tunnel_type');
+    radius.load_dictionaries();
+
+    decoded = radius.decode({
+      secret: secret,
+      packet: radius.encode({
+        code: 'Accounting-Request',
+        secret: secret,
+        attributes: [
+          ['Tunnel-Type', 0x00, 'TESTTUNNEL']
+        ]
+      })
+    });
+
+    var expected_attrs = {'Tunnel-Type': [0x00, 'TESTTUNNEL']};
+    test.deepEqual( expected_attrs, decoded.attributes );
+
     test.done();
   },
 

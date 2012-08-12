@@ -1,0 +1,3 @@
+# Fake tunnel type to be loaded before ATTRIBUTE Tunnel-Type is defined
+
+VALUE	Tunnel-Type			TESTTUNNEL			31
