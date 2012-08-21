@@ -524,5 +524,59 @@ module.exports = testCase({
 
     test.equal( 0, decoded.identifier );
     test.done();
+  },
+
+  // handle two packets quickly before dictionaries are loaded
+  test_async_dictionary_race: function(test) {
+    var expected_attrs = {
+      'NAS-IP-Address': '10.0.0.90',
+      'NAS-Port': 0,
+      'NAS-Port-Type': 'Wireless-802.11',
+      'User-Name': '7c:c5:37:ff:f8:af',
+      'User-Password': '7c:c5:37:ff:f8:af',
+      'Calling-Station-Id': '7CC537FFF8AF',
+      'Called-Station-Id': '000B86F02068',
+      'Service-Type': 'Login-User',
+      'Vendor-Specific': {
+        'Aruba-Essid-Name': 'muir-aruba-guest',
+        'Aruba-Location-Id': '00:1a:1e:c6:b0:ca',
+        'Aruba-AP-Group': 'cloud-cp'
+      },
+      'Message-Authenticator': new Buffer('f8a12329c7ed5a6e2568515243efb918', 'hex')
+    };
+
+    var raw_packet = fs.readFileSync(__dirname + '/captures/aruba_mac_auth.packet');
+
+    var attempts = 0;
+    var try_once = function() {
+      radius.add_dictionary(__dirname + '/dictionaries/dictionary.aruba');
+      radius.unload_dictionaries();
+
+      radius.decode({
+        packet: raw_packet,
+        secret: secret,
+        callback: function(err, decoded) {
+          test.deepEqual( expected_attrs, decoded.attributes );
+          attempts += 1;
+        }
+      });
+
+      radius.decode({
+        packet: raw_packet,
+        secret: secret,
+        callback: function(err, decoded) {
+          test.deepEqual( expected_attrs, decoded.attributes );
+
+          attempts += 1;
+          if (attempts == 100) {
+            test.done();
+          } else  {
+            try_once();
+          }
+        }
+      });
+    };
+
+    try_once();
   }
 });
