@@ -578,5 +578,45 @@ module.exports = testCase({
     };
 
     try_once();
+  },
+
+  test_date_type: function(test) {
+    var raw_packet = fs.readFileSync(__dirname + '/captures/motorola_accounting.packet');
+
+    var decoded = radius.decode({
+      packet: raw_packet,
+      secret: secret
+    });
+
+    var epoch = 1349879753;
+
+    test.equal( epoch * 1000, decoded.attributes['Event-Timestamp'].getTime() );
+
+    var encoded = radius.encode({
+      code: 'Accounting-Request',
+      identifier: decoded.identifier,
+      attributes: [
+        ['User-Name', '00-1F-3B-8C-3A-15'],
+        ['Acct-Status-Type', 'Start'],
+        ['Acct-Session-Id', '1970D5A4-001F3B8C3A15-0000000001'],
+        ['Calling-Station-Id', '00-1F-3B-8C-3A-15'],
+        ['Called-Station-Id', 'B4-C7-99-77-59-D0:muir-moto-guest-site1'],
+        ['NAS-Port', 1],
+        ['NAS-Port-Type', 'Wireless-802.11'],
+        ['NAS-IP-Address', '10.2.0.3'],
+        ['NAS-Identifier', 'ap6532-70D5A4'],
+        ['NAS-Port-Id', 'radio2'],
+        ['Event-Timestamp', new Date(epoch * 1000)],
+        ['Tunnel-Type', 0x00, 'VLAN' ],
+        ['Tunnel-Medium-Type', 0x00, 'IEEE-802'],
+        ['Tunnel-Private-Group-Id', '30'],
+        ['Acct-Authentic', 'RADIUS']
+      ],
+      secret: secret
+    });
+
+    test.equal( raw_packet.toString('hex'), encoded.toString('hex') );
+
+    test.done();
   }
 });
