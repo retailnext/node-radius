@@ -54,7 +54,7 @@ To prepare a stand-alone packet, try this:
 
 ### radius.decode(\<args>)
 
-decode takes as input a hash of args:
+decode takes as input an object with the following fields:
 
 - packet (required): a Buffer containing the raw UDP RADIUS packet (as read off a socket)
 - secret (required): a String containing the RADIUS shared secret
@@ -65,7 +65,7 @@ Using the dictionaries available, decode parses the raw packet and yields an obj
 - code: string representation of the packet code ("Access-Request", "Accounting-Response", etc)
 - identifier: packet identifier number (used for duplicate packet detection)
 - length: RADIUS packet length
-- attributes: a hash containing all attributes node-radius knew how to parse. If an attribute is repeated, its value in the "attributes" hash will become an Array containing each value. Unfortunately the dictionary files do not specify which attributes are repeatable, so if an attribute might be repeated then you need to check if the value in "attributes" is a scalar value or an Array.
+- attributes: an object containing all attributes node-radius knew how to parse. If an attribute is repeated, its value in the "attributes" object will become an Array containing each value. Unfortunately the dictionary files do not specify which attributes are repeatable, so if an attribute might be repeated then you need to check if the value in "attributes" is a scalar value or an Array.
 - raw_attributes: an array of arrays containing each raw attribute (attribute type and a Buffer containing the attribute value). This is mainly used by node-radius for generating the response packet, and would only be useful to you if you are missing relevant dictionaries and/or want to decode attributes yourself.
 
 Here is an example using the asynchronous interface to decode a packet:
@@ -82,7 +82,7 @@ Here is an example using the asynchronous interface to decode a packet:
 
 ### radius.encode(\<args>)
 
-encode takes a hash of arguments and returns a Buffer ready to be sent over the wire. The accepted arguments are:
+encode takes an object for arguments and returns a Buffer ready to be sent over the wire. The accepted arguments are:
 
 - code (required): string representation of the packet code ("Access-Request", "Accounting-Response", etc)
 - secret (required): RADIUS shared secret
@@ -155,7 +155,7 @@ Here is an example using the asynchronous interface, sending the encoded packet 
 
 ### radius.encode\_response(\<args>)
 
-encode_response prepares a response packet based on previously received and decoded packet. "args" is a hash with the following properties:
+encode_response prepares a response packet based on previously received and decoded packet. "args" is an object with the following properties:
 
 - packet (required): the output of a previous call to radius.decode
 - code (required): String representation of the packet code ("Access-Reject, "Accounting-Response", etc)
@@ -189,10 +189,10 @@ node-radius will also follow "$INCLUDE" directives inside of dictionary files (t
 ## Important notes:
 
 - node-radius in general does _not_ perform "higher-level" protocol validation, so for example node-radius will not complain if you encode an Access-Request packet but fail to include a NAS-IP-Address or NAS-Identifier.
-- node-radius does not perform any potentially blocking operations except for two one-time actions: loading the dictionaries the first time they are needed, and generating a random message authenticator for the first time. If you find the synchronous interface convenient, go ahead and use it. The asynchronous interface is there if you really really never want to block, not even just once on startup.
+- node-radius will never block using the asynchronous, callback-style interface. Using the synchronous interface, node-radius performs two one-time, potentially blocking actions: loading the dictionaries, and generating the first random message authenticator. If you find the synchronous interface convenient, go ahead and use it. The asynchronous interface is there if you really really never want to block, not even just once on startup.
 - node-radius in general assumes most strings are UTF-8 encoded. This will work fine for ASCII and UTF-8 strings, but will not work for other encodings. At some point I might add an "encoding" option to override this default encoding, and/or a "raw" mode that just deals with Buffers (rather than Strings) when the encoding is not known.
 - node-radius does not support non-standard VSAs (where type or length field for attributes are not one octet each).
-- node-radius does not support special decoding/encoding for the following attribute types: date, ipv6addr, ifid, ipv6prefix, short. If node-radius encounters a type it doesn't support, node-radius will return a raw Buffer when decoding, and expect a Buffer when encoding.
-- node-radius does not support Tunnel-Password encryption/decryption (and any other encryption types other than that defined by RFC2865 for User-Password).
+- node-radius does not support special decoding/encoding for the following attribute types: ipv6addr, ifid, ipv6prefix, short. If node-radius encounters a type it doesn't support, node-radius will return a raw Buffer when decoding, and expect a Buffer when encoding.
+- node-radius does not support any password encryption types other than that defined by RFC2865 for User-Password (e.g. does not support Tunnel-Password).
 
 But, on the plus-side, unlike many other RADIUS libraries node-radius supports encrypting/decrypting passwords longer than 16 bytes!
