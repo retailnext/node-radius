@@ -289,6 +289,17 @@ module.exports = testCase({
 
     test.deepEqual( expected_attrs, decoded.attributes );
 
+    // detect invalid accounting packets
+    test.throws( function() {
+      radius.decode({ packet: raw_acct_request, secret: 'not-secret' });
+    } );
+
+    try {
+      radius.decode({ packet: raw_acct_request, secret: 'not-secret' });
+    } catch (err) {
+      test.deepEqual( expected_attrs, err.decoded.attributes );
+    }
+
     // test we can encode the same packet
     var encoded = radius.encode({
       code: 'Accounting-Request',
