@@ -349,6 +349,23 @@ module.exports = testCase({
         test.deepEqual( expected_attrs, err.decoded.attributes );
       }
       test.done();
+    },
+
+    test_invalid_accounting_packet_authenticator_async: function(test) {
+      var raw_acct_request = test_args.raw_acct_request;
+      var expected_attrs = test_args.expected_acct_attrs;
+
+      var decode_callback = function(err, packet) {
+        test.ok( err );
+        test.deepEqual( expected_attrs, err.decoded.attributes );
+        test.done();
+      };
+
+      radius.decode({
+        packet: raw_acct_request,
+        secret: 'not-secret',
+        callback: decode_callback
+      });
     }
   },
 
