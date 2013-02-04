@@ -129,6 +129,52 @@ module.exports = testCase({
     test.done();
   },
 
+  test_decode_hash_attributes: function(test) {
+    var attrs = {
+      'User-Name': 'ornithopter-aliptic',
+      'User-Password': 'nucleohistone-overwilily',
+      'Service-Type': 'Login-User',
+      'NAS-IP-Address': '169.134.68.136'
+    };
+    var packet = radius.encode({
+      code: 'Access-Request',
+      identifier: 123,
+      attributes: attrs,
+      secret: secret
+    });
+
+    var decoded = radius.decode({ packet: packet, secret: secret });
+    test.equal( 'Access-Request', decoded.code );
+    test.equal( 123, decoded.identifier );
+    test.deepEqual( attrs, decoded.attributes );
+
+    test.done();
+  },
+
+  test_throws_on_nested_hash_attributes: function(test) {
+    var attrs = {
+      'User-Name': 'ornithopter-aliptic',
+      'User-Password': 'nucleohistone-overwilily',
+      'Service-Type': 'Login-User',
+      'NAS-IP-Address': '169.134.68.136',
+      'Vendor-Specific': {
+        'Aruba-User-Role': 'cracked-tylote',
+        'Aruba-User-Vlan': 825,
+        'Aruba-Essid-Name': 'phene-dentinalgia'
+      }
+    };
+
+    test.throws(function() {
+      var packet = radius.encode({
+        code: 'Access-Request',
+        identifier: 123,
+        attributes: attrs,
+        secret: secret
+      });
+    });
+    test.done();
+  },
+
   // test that our encoded packet matches bit-for-bit with a "real"
   // RADIUS packet
   test_encode_bit_for_bit: function(test) {
