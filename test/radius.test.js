@@ -4,6 +4,8 @@ var fs = require('fs');
 
 var secret = 'nearbuy';
 
+var test_args = {};
+
 module.exports = testCase({
   setUp: function(callback) {
     callback();
@@ -261,79 +263,93 @@ module.exports = testCase({
     test.done();
   },
 
-  test_accounting: function(test) {
-    radius.load_dictionary(__dirname + '/dictionaries/dictionary.airespace');
+  accounting_group: {
+    setUp: function(cb) {
+      radius.load_dictionary(__dirname + '/dictionaries/dictionary.airespace');
 
-    var raw_acct_request = fs.readFileSync(__dirname + '/captures/cisco_accounting.packet');
+      test_args = {};
+      test_args.raw_acct_request = fs.readFileSync(__dirname + '/captures/cisco_accounting.packet');
+      test_args.expected_acct_attrs = {
+        'User-Name': 'user_7C:C5:37:FF:F8:AF_134',
+	      'NAS-Port': 1,
+	      'NAS-IP-Address': '10.0.3.4',
+        'Framed-IP-Address': '10.2.0.252',
+        'NAS-Identifier': 'Cisco 4400 (Anchor)',
+        'Vendor-Specific': {
+          'Airespace-Wlan-Id': 2
+        },
+        'Acct-Session-Id': '4fecc41e/7c:c5:37:ff:f8:af/9',
+        'Acct-Authentic': 'RADIUS',
+        'Tunnel-Type': [0x00, 'VLAN'],
+        'Tunnel-Medium-Type': [0x00, 'IEEE-802'],
+        'Tunnel-Private-Group-Id': 5,
+        'Acct-Status-Type': 'Start',
+        'Calling-Station-Id': '7c:c5:37:ff:f8:af',
+        'Called-Station-Id': '00:22:55:90:39:60'
+      };
+      cb();
+    },
 
-    var decoded = radius.decode({ packet: raw_acct_request, secret: secret });
+    test_accounting: function(test) {
+      var raw_acct_request = test_args.raw_acct_request;
+      var decoded = radius.decode({ packet: raw_acct_request, secret: secret });
 
-    var expected_attrs = {
-      'User-Name': 'user_7C:C5:37:FF:F8:AF_134',
-	    'NAS-Port': 1,
-	    'NAS-IP-Address': '10.0.3.4',
-      'Framed-IP-Address': '10.2.0.252',
-      'NAS-Identifier': 'Cisco 4400 (Anchor)',
-      'Vendor-Specific': {
-        'Airespace-Wlan-Id': 2
-      },
-      'Acct-Session-Id': '4fecc41e/7c:c5:37:ff:f8:af/9',
-      'Acct-Authentic': 'RADIUS',
-      'Tunnel-Type': [0x00, 'VLAN'],
-      'Tunnel-Medium-Type': [0x00, 'IEEE-802'],
-      'Tunnel-Private-Group-Id': 5,
-      'Acct-Status-Type': 'Start',
-      'Calling-Station-Id': '7c:c5:37:ff:f8:af',
-      'Called-Station-Id': '00:22:55:90:39:60'
-    };
+      var expected_attrs = test_args.expected_acct_attrs;
 
-    test.deepEqual( expected_attrs, decoded.attributes );
+      test.deepEqual( expected_attrs, decoded.attributes );
 
-    // detect invalid accounting packets
-    test.throws( function() {
-      radius.decode({ packet: raw_acct_request, secret: 'not-secret' });
-    } );
+      // test we can encode the same packet
+      var encoded = radius.encode({
+        code: 'Accounting-Request',
+        identifier: decoded.identifier,
+        secret: secret,
+        attributes: [
+       	  ['User-Name', 'user_7C:C5:37:FF:F8:AF_134'],
+	        ['NAS-Port', 1],
+	        ['NAS-IP-Address', '10.0.3.4'],
+          ['Framed-IP-Address', '10.2.0.252'],
+          ['NAS-Identifier', 'Cisco 4400 (Anchor)'],
+          ['Vendor-Specific', 'Airespace', [['Airespace-Wlan-Id', 2]]],
+          ['Acct-Session-Id', '4fecc41e/7c:c5:37:ff:f8:af/9'],
+          ['Acct-Authentic', 'RADIUS'],
+          ['Tunnel-Type', 0x00, 'VLAN'],
+          ['Tunnel-Medium-Type', 0x00, 'IEEE-802'],
+          ['Tunnel-Private-Group-Id', '5'],
+          ['Acct-Status-Type', 'Start'],
+          ['Calling-Station-Id', '7c:c5:37:ff:f8:af'],
+          ['Called-Station-Id', '00:22:55:90:39:60']
+        ]
+      });
+      test.equal( encoded.toString('hex'), raw_acct_request.toString('hex') );
 
-    try {
-      radius.decode({ packet: raw_acct_request, secret: 'not-secret' });
-    } catch (err) {
-      test.deepEqual( expected_attrs, err.decoded.attributes );
+      var raw_acct_response = fs.readFileSync(__dirname +
+                                              '/captures/cisco_accounting_response.packet');
+      encoded = radius.encode_response({
+        packet: decoded,
+        secret: secret,
+        code: 'Accounting-Response'
+      });
+      test.equal( encoded.toString('hex'), raw_acct_response.toString('hex') );
+
+      test.done();
+    },
+
+    test_invalid_accounting_packet_authenticator: function(test) {
+      var raw_acct_request = test_args.raw_acct_request;
+      var expected_attrs = test_args.expected_acct_attrs;
+
+      // detect invalid accounting packets
+      test.throws( function() {
+        radius.decode({ packet: raw_acct_request, secret: 'not-secret' });
+      } );
+
+      try {
+        radius.decode({ packet: raw_acct_request, secret: 'not-secret' });
+      } catch (err) {
+        test.deepEqual( expected_attrs, err.decoded.attributes );
+      }
+      test.done();
     }
-
-    // test we can encode the same packet
-    var encoded = radius.encode({
-      code: 'Accounting-Request',
-      identifier: decoded.identifier,
-      secret: secret,
-      attributes: [
-       	['User-Name', 'user_7C:C5:37:FF:F8:AF_134'],
-	      ['NAS-Port', 1],
-	      ['NAS-IP-Address', '10.0.3.4'],
-        ['Framed-IP-Address', '10.2.0.252'],
-        ['NAS-Identifier', 'Cisco 4400 (Anchor)'],
-        ['Vendor-Specific', 'Airespace', [['Airespace-Wlan-Id', 2]]],
-        ['Acct-Session-Id', '4fecc41e/7c:c5:37:ff:f8:af/9'],
-        ['Acct-Authentic', 'RADIUS'],
-        ['Tunnel-Type', 0x00, 'VLAN'],
-        ['Tunnel-Medium-Type', 0x00, 'IEEE-802'],
-        ['Tunnel-Private-Group-Id', '5'],
-        ['Acct-Status-Type', 'Start'],
-        ['Calling-Station-Id', '7c:c5:37:ff:f8:af'],
-        ['Called-Station-Id', '00:22:55:90:39:60']
-      ]
-    });
-    test.equal( encoded.toString('hex'), raw_acct_request.toString('hex') );
-
-    var raw_acct_response = fs.readFileSync(__dirname +
-                                            '/captures/cisco_accounting_response.packet');
-    encoded = radius.encode_response({
-      packet: decoded,
-      secret: secret,
-      code: 'Accounting-Response'
-    });
-    test.equal( encoded.toString('hex'), raw_acct_response.toString('hex') );
-
-    test.done();
   },
 
   test_async_encode_decode: function(test) {
