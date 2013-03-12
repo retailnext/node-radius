@@ -1,6 +1,7 @@
 var testCase = require('nodeunit').testCase;
 var radius = require('../lib/radius');
 var fs = require('fs');
+var crypto = require('crypto');
 
 var secret = 'nearbuy';
 
@@ -574,7 +575,7 @@ module.exports = testCase({
         code: 'Accounting-Request',
         secret: secret,
         attributes: [
-         ['Acct-Status-Type', 'Tunnel-Reject']
+          ['Acct-Status-Type', 'Tunnel-Reject']
         ]
       })
     });
@@ -706,6 +707,49 @@ module.exports = testCase({
     });
 
     test.equal( raw_packet.toString('hex'), encoded.toString('hex') );
+
+    test.done();
+  },
+
+  test_disconnect_request: function(test) {
+    var encoded = radius.encode({
+      code: 'Disconnect-Request',
+      identifier: 54,
+      secret: secret,
+      attributes: [
+        ['User-Name', 'mariticide-inquietation'],
+        ['NAS-Identifier', 'Aglauros-charioted']
+      ]
+    });
+
+    // check we did the non-user-password authenticator
+    var got_authenticator = new Buffer(16);
+    encoded.copy(got_authenticator, 0, 4);
+    encoded.fill(0, 4, 20);
+
+    var expected_authenticator = new Buffer(16);
+    var hasher = crypto.createHash("md5");
+    hasher.update(encoded);
+    hasher.update(secret);
+    expected_authenticator.write(hasher.digest("binary"), 0, 16, "binary");
+
+    test.equal( expected_authenticator.toString('hex'), got_authenticator.toString('hex') );
+
+    // and make sure we check the authenticator when decoding
+    test.throws(function() {
+      radius.decode({
+        packet: encoded,
+        secret: secret
+      });
+    });
+
+    expected_authenticator.copy(encoded, 4, 0);
+    test.doesNotThrow(function() {
+      radius.decode({
+        packet: encoded,
+        secret: secret
+      });
+    });
 
     test.done();
   }
