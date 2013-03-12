@@ -752,5 +752,48 @@ module.exports = testCase({
     });
 
     test.done();
+  },
+
+  test_verify_response: function(test) {
+    var request = radius.encode({
+      secret: secret,
+      code: 'Accounting-Request',
+      attributes: {
+        'User-Name': '00-1F-3B-8C-3A-15',
+        'Acct-Status-Type':  'Start'
+      }
+    });
+
+    var response = radius.encode_response({
+      secret: secret,
+      code: 'Accounting-Response',
+      packet: radius.decode({ packet: request, secret: secret })
+    });
+
+    test.ok( radius.verify_response({
+      request: request,
+      response: response,
+      secret: secret
+    }) );
+
+    test.ok( !radius.verify_response({
+      request: request,
+      response: response,
+      secret: "Calliopsis-misbeholden"
+    }) );
+
+    // response encoded with wrong secret
+    response = radius.encode_response({
+      secret: "moyenne-paraboliform",
+      code: 'Accounting-Response',
+      packet: radius.decode({ packet: request, secret: secret })
+    });
+    test.ok( !radius.verify_response({
+      request: request,
+      response: response,
+      secret: secret
+    }) );
+
+    test.done();
   }
 });
