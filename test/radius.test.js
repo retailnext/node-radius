@@ -816,7 +816,18 @@ module.exports = testCase({
             test.equal( null, decoded );
             test.ok( err.message.match(/invalid packet code/) );
 
-            test.done();
+
+            radius.encode({
+              secret: secret,
+              identifier: 165278,
+              code: "Access-Accept",
+              callback: function(err, encoded) {
+                test.equal( null, encoded );
+                test.ok( err.message.match(/identifier too large/) );
+
+                test.done();
+              }
+            });
           }
         });
       }
