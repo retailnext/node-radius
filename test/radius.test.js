@@ -795,5 +795,31 @@ module.exports = testCase({
     }) );
 
     test.done();
+  },
+
+  // make sure async encode/decode errors work properly
+  test_async_encode_decode_errors: function(test) {
+    radius.encode({
+      secret: secret,
+      code: 'Access-Request',
+      attributes: [
+        ['Vendor-Specific', 'life-decayed', [['Foo', 'Bar']]]
+      ],
+      callback: function(err, encoded) {
+        test.equal( null, encoded );
+        test.ok( err.message.match(/unknown vendor/) );
+
+        radius.decode({
+          secret: secret,
+          packet: new Buffer("feedway-murdrum-confriar-showmanry", "ascii"),
+          callback: function(err, decoded) {
+            test.equal( null, decoded );
+            test.ok( err.message.match(/invalid packet code/) );
+
+            test.done();
+          }
+        });
+      }
+    });
   }
 });
