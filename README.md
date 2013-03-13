@@ -166,7 +166,17 @@ encode_response does a few things for you to prepare the response:
 
 1. sets the response packet's message identifier to the identifer of the previously received packet
 1. copies any "Proxy-State" attributes from the previously received packet into the response packet
-1. calculates the appropriate response authenticator
+1. calculates the appropriate response authenticator based on the request's authenticator
+
+### radius.verify\_response(\<args>)
+
+verify_response checks the authenticator of a response packet you receive. It returns true if the authenticator checks out, and false otherwise (likely because the other side's shared secret is wrong). "args" is an object with the following properties:
+
+- request (required): the request packet you previously sent (should be the raw packet, i.e. the output of radius.encode)
+- response (required): the response you received to your request packet
+- secret (required): RADIUS shared secret
+
+This method is useful if you are acting as the NAS. For example, if you send an "Access-Request", you can use this method to verify the response you get ("Reject" or "Accept") is legitimate.
 
 ## Dictionaries
 
