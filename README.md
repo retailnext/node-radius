@@ -88,8 +88,8 @@ encode takes an object for arguments and returns a Buffer ready to be sent over 
 - secret (required): RADIUS shared secret
 - identifier (optional): packet identifer number (defaults to a random number from 0 to 255)
 - attributes (optional): RADIUS attributes you want to add to the packet
-- authenticator (optional): the 16 octet authenticator field (defaults to a random 16 bytes except for "Accounting-Request" messages, which sets the authenticator per RFC2866)
 - callback (optional): if provided, encode will operate asynchronously. The first argument to the callback will be an error, if any, and the second argument will be the encoded packet. If callback is not provided, encode will return the encoded packet synchronously. See the note on asynchronicity near the end of this README.
+- authenticator (optional): the 16 octet authenticator field (defaults to a random 16 bytes for "Access-Request" packets, otherwise all zeros in preparation for the message checksum per RFC2866). You should never need to set this yourself (see radius.encode_response for responding to request packets).
 
 The attributes will typically be like the following (see above example):
 
@@ -97,6 +97,13 @@ The attributes will typically be like the following (see above example):
       [<attribute name>, <attribute value>],
       ...
     ]
+
+If you don't care about attribute ordering, you can use a hash for the attributes:
+
+    attributes: {
+      <attribute name>: <attribute value>,
+      ...
+    }
 
 If you want to send attributes that you haven't loaded a dictionary for, you can do:
 
@@ -172,7 +179,7 @@ encode_response does a few things for you to prepare the response:
 
 verify_response checks the authenticator of a response packet you receive. It returns true if the authenticator checks out, and false otherwise (likely because the other side's shared secret is wrong). "args" is an object with the following properties:
 
-- request (required): the request packet you previously sent (should be the raw packet, i.e. the output of radius.encode)
+- request (required): the request packet you previously sent (should be the raw packet, i.e. the output of a call to radius.encode)
 - response (required): the response you received to your request packet
 - secret (required): RADIUS shared secret
 
