@@ -1,4 +1,4 @@
-# node-radius [![Build Status](https://secure.travis-ci.org/nearbuy/node-radius.png)](http://travis-ci.org/nearbuy/node-radius) - A RADIUS library for node.js
+# node-radius [![Build Status](https://secure.travis-ci.org/retailnext/node-radius.png)](http://travis-ci.org/retailnext/node-radius) - A RADIUS library for node.js
 
 node-radius is a RADIUS packet encoding/decoding library for node.js written in Javascript. With node-radius you can easily decode received packets, encode packets to send, and prepare responses to received packets. node-radius supports both RADIUS authentication and RADIUS accounting packets. node-radius is designed to be fast and simple, providing both a synchronous and a callback-style asynchronous interface.
 
