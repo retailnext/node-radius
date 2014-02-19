@@ -832,5 +832,49 @@ module.exports = testCase({
         });
       }
     });
+  },
+
+  test_server_request: function(test) {
+    var encoded1 = radius.encode({
+      code: 'Status-Server',
+      identifier: 54,
+      secret: secret,
+      attributes: [
+        ['NAS-Identifier', 'symphilism-dicentrine']
+      ]
+    });
+
+    var encoded2 = radius.encode({
+      code: 'Status-Server',
+      identifier: 54,
+      secret: secret,
+      attributes: [
+        ['NAS-Identifier', 'symphilism-dicentrine']
+      ]
+    });
+
+    // check we are doing a random authenticator
+    var got_authenticator1 = new Buffer(16);
+    encoded1.copy(got_authenticator1, 0, 4);
+    encoded1.fill(0, 4, 20);
+    var got_authenticator2 = new Buffer(16);
+    encoded2.copy(got_authenticator2, 0, 4);
+    encoded2.fill(0, 4, 20);
+
+    test.notEqual( got_authenticator1.toString(), got_authenticator2.toString() );
+
+    var response = radius.encode_response({
+      code: 'Access-Accept',
+      secret: secret,
+      packet: radius.decode({packet: encoded1, secret: secret})
+    });
+
+    test.ok( radius.verify_response({
+      request: encoded1,
+      response: response,
+      secret: secret
+    }) );
+
+    test.done();
   }
 });
