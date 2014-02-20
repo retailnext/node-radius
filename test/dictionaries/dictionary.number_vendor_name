@@ -1,0 +1,8 @@
+VENDOR          123Foo                       995486
+
+BEGIN-VENDOR    123Foo
+ATTRIBUTE       1Integer                       1       integer
+END-VENDOR 123Foo
+
+VENDORATTR  995486       1String                        2       string
+VENDORATTR  995486       12345                        3       string

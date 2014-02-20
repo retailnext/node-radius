@@ -876,5 +876,39 @@ module.exports = testCase({
     }) );
 
     test.done();
+  },
+
+  test_vendor_names_with_numbers: function(test) {
+    radius.load_dictionary(__dirname + '/dictionaries/dictionary.number_vendor_name');
+
+    var encoded = radius.encode({
+      code: "Access-Request",
+      secret: secret,
+
+      attributes: [
+        ['Vendor-Specific', '123Foo', [
+          ['1Integer', 478],
+          ['1String', 'Zollernia-fibrovasal'],
+          ['12345', 'myrmecophagoid-harn']
+        ]]
+      ]
+    });
+
+    var decoded = radius.decode({
+      packet: encoded,
+      secret: secret
+    });
+
+    test.equal( 995486, radius.vendor_name_to_id('123Foo') );
+
+    test.deepEqual( {
+      'Vendor-Specific': {
+        '1Integer': 478,
+        '1String': 'Zollernia-fibrovasal',
+        '12345': 'myrmecophagoid-harn'
+      }
+    }, decoded.attributes );
+
+    test.done();
   }
 });
