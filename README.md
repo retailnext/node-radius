@@ -68,6 +68,8 @@ Using the dictionaries available, decode parses the raw packet and yields an obj
 - attributes: an object containing all attributes node-radius knew how to parse. If an attribute is repeated, its value in the "attributes" object will become an Array containing each value. Unfortunately the dictionary files do not specify which attributes are repeatable, so if an attribute might be repeated then you need to check if the value in "attributes" is a scalar value or an Array.
 - raw_attributes: an array of arrays containing each raw attribute (attribute type and a Buffer containing the attribute value). This is mainly used by node-radius for generating the response packet, and would only be useful to you if you are missing relevant dictionaries and/or want to decode attributes yourself.
 
+When decoding requests (e.g. "Access-Request", "Accounting-Request"), decode will automatically verify the request authenticator and the Message-Authenticator attribute, if present. If the request doesn't check out, decode will raise an error in synchronous mode, and return an error in asynchronous mode. The error, an instance of Radius.InvalidSecretError, has a "decoded" field you can use to inspect the decoded but invalid message. The most common reason for an incorrect authenticator is using the wrong shared secret.
+
 Here is an example using the asynchronous interface to decode a packet:
 
     radius.decode({
@@ -89,7 +91,18 @@ encode takes an object for arguments and returns a Buffer ready to be sent over 
 - identifier (optional): packet identifer number (defaults to a random number from 0 to 255)
 - attributes (optional): RADIUS attributes you want to add to the packet
 - callback (optional): if provided, encode will operate asynchronously. The first argument to the callback will be an error, if any, and the second argument will be the encoded packet. If callback is not provided, encode will return the encoded packet synchronously. See the note on asynchronicity near the end of this README.
-- authenticator (optional): the 16 octet authenticator field (defaults to a random 16 bytes for "Access-Request" packets, otherwise all zeros in preparation for the message checksum per RFC2866). You should never need to set this yourself (see radius.encode_response for responding to request packets).
+- add_message_authenticator (optional): a boolean value controlling whether the library adds the Message-Authenticator HMAC to the packet. See below for more details.
+
+encode will automatically add the Message-Authenticator when:
+
+- encoding a message with an "EAP-Message" attribute
+- encoding a "Status-Server" message
+- you manually pass the "add_message_authenticator: true" option
+
+encode will not add the Message-Authenticator when:
+
+- the attributes already contain a "Message-Authenticator" attribute
+- you manually pass the "add_message_authenticator: false" option
 
 The attributes will typically be like the following (see above example):
 
@@ -167,23 +180,27 @@ encode_response prepares a response packet based on previously received and deco
 - packet (required): the output of a previous call to radius.decode
 - code (required): String representation of the packet code ("Access-Reject, "Accounting-Response", etc)
 - attributes (optional): RADIUS attributes you want to add to the packet
-- callback (optional): if provided, encode_response will operate asynchronously. The first argument to the callback will be an error, if any, and the second argument will be the encoded packet. If callback is not provided, encode\_response will return the encoded packet synchronously. See the note on asynchronicity near the end of this README.
+- callback (optional): if provided, encode\_response will operate asynchronously. The first argument to the callback will be an error, if any, and the second argument will be the encoded packet. If callback is not provided, encode\_response will return the encoded packet synchronously. See the note on asynchronicity near the end of this README.
 
 encode_response does a few things for you to prepare the response:
 
 1. sets the response packet's message identifier to the identifer of the previously received packet
 1. copies any "Proxy-State" attributes from the previously received packet into the response packet
 1. calculates the appropriate response authenticator based on the request's authenticator
+1. calculates and adds a Message-Authenticator attribute if the request contained one
 
 ### radius.verify\_response(\<args>)
 
-verify_response checks the authenticator of a response packet you receive. It returns true if the authenticator checks out, and false otherwise (likely because the other side's shared secret is wrong). "args" is an object with the following properties:
+verify_response checks the authenticator and Message-Authenticator attribute, if applicable, of a response packet you receive. It returns true if the packet checks out, and false otherwise (likely because the other side's shared secret is wrong). "args" is an object with the following properties:
 
 - request (required): the request packet you previously sent (should be the raw packet, i.e. the output of a call to radius.encode)
-- response (required): the response you received to your request packet
+- response (required): the response you received to your request packet (again, the raw packet)
 - secret (required): RADIUS shared secret
+- callback (optional): if provided, verify\_response will operate asynchronously. The first argument to the callback will be an error, if any, and the second argument will be the boolean result. If callback is not provided, verify\_response will return the boolean result synchronously. See the note on asynchronicity near the end of this README.
 
 This method is useful if you are acting as the NAS. For example, if you send an "Access-Request", you can use this method to verify the response you get ("Reject" or "Accept") is legitimate.
+
+Note that if the request contained a Message-Authenticator, the response must also contain a Message-Authenticator.
 
 ## Dictionaries
 
