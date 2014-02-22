@@ -3,12 +3,13 @@ var radius = require('../lib/radius');
 var fs = require('fs');
 var crypto = require('crypto');
 
-var secret = 'nearbuy';
+var secret;
 
 var test_args = {};
 
 module.exports = testCase({
   setUp: function(callback) {
+    secret = "nearbuy";
     callback();
   },
   tearDown: function(callback) {
@@ -856,10 +857,9 @@ module.exports = testCase({
     // check we are doing a random authenticator
     var got_authenticator1 = new Buffer(16);
     encoded1.copy(got_authenticator1, 0, 4);
-    encoded1.fill(0, 4, 20);
+
     var got_authenticator2 = new Buffer(16);
     encoded2.copy(got_authenticator2, 0, 4);
-    encoded2.fill(0, 4, 20);
 
     test.notEqual( got_authenticator1.toString(), got_authenticator2.toString() );
 
@@ -910,5 +910,161 @@ module.exports = testCase({
     }, decoded.attributes );
 
     test.done();
+  },
+
+  message_authenticator_group: {
+    setUp: function(cb) {
+      secret = "testing123";
+
+      test_args = {
+        raw_request: fs.readFileSync(__dirname + '/captures/eap_request.packet')
+      };
+      test_args.parsed_request = radius.decode({
+        packet: test_args.raw_request,
+        secret: secret
+      });
+      cb();
+    },
+
+    // make sure we calculate the same Message-Authenticator
+    test_calculate: function(test) {
+      var attrs_without_ma = test_args.parsed_request.raw_attributes.filter(function(a) {
+        return a[0] != radius.attr_name_to_id('Message-Authenticator');
+      });
+
+      var encoded = radius.encode({
+        code: test_args.parsed_request.code,
+        identifier: test_args.parsed_request.identifier,
+        authenticator: test_args.parsed_request.authenticator,
+        attributes: attrs_without_ma,
+        secret: secret
+      });
+
+      test.equal( test_args.raw_request.toString('hex'), encoded.toString('hex') );
+
+      test.done();
+    },
+
+    // encode_response should calculate the appropriate Message-Authenticator
+    test_encode_response: function(test) {
+      var response = radius.encode_response({
+        code: "Access-Accept",
+        secret: secret,
+        packet: test_args.parsed_request
+      });
+
+      var parsed_response = radius.decode({
+        packet: response,
+        secret: secret
+      });
+
+      // calculate expected Message-Authenticator
+
+      var empty = new Buffer(16);
+      empty.fill(0);
+
+      var expected_response = radius.encode({
+        code: "Access-Accept",
+        identifier: test_args.parsed_request.identifier,
+        authenticator: test_args.parsed_request.authenticator,
+        attributes: [["Message-Authenticator", empty]],
+        secret: secret
+      });
+
+      // expected_response's authenticator is correct, but Message-Authenticator is wrong
+      // (it's all 0s). make sure verify_response checks both
+      test.ok( !radius.verify_response({
+        request: test_args.raw_request,
+        response: expected_response,
+        secret: secret
+      }) );
+
+      // put back the request's authenticator
+      test_args.parsed_request.authenticator.copy(expected_response, 4);
+
+      var expected_ma = radius.calculate_message_authenticator(expected_response, secret);
+      test.equal(
+        expected_ma.toString("hex"),
+        parsed_response.attributes["Message-Authenticator"].toString("hex")
+      );
+
+      test.ok( radius.verify_response({
+        request: test_args.raw_request,
+        response: response,
+        secret: secret
+      }) );
+
+      // async wrong Message-Authenticator
+      radius.verify_response({
+        request: test_args.raw_request,
+        response: expected_response,
+        secret: secret,
+        callback: function(err, ok) {
+          test.ifError(err);
+          test.ok( !ok );
+
+          radius.verify_response({
+            request: test_args.raw_request,
+            response: response,
+            secret: secret,
+            callback: function(err, ok) {
+              test.ifError(err);
+              test.ok( ok );
+
+              test.done();
+            }
+          });
+        }
+      });
+    },
+
+    // response is missing Message-Authenticator, not okay
+    test_response_missing_ma: function(test) {
+      var bad_response = radius.encode({
+        code: "Access-Accept",
+        identifier: test_args.parsed_request.identifier,
+        authenticator: test_args.parsed_request.authenticator,
+        attributes: [],
+        secret: secret
+      });
+
+      test.ok( !radius.verify_response({
+        request: test_args.raw_request,
+        response: bad_response,
+        secret: secret
+      }) );
+
+      radius.verify_response({
+        request: test_args.raw_request,
+        response: bad_response,
+        secret: secret,
+        callback: function(err, ok) {
+          test.ifError(err);
+          test.ok( !ok );
+
+          test.done();
+        }
+      });
+    },
+
+    // make sure we verify Message-Authenticator when decoding requests
+    test_decode_verify: function(test) {
+      test.throws(function() {
+        radius.decode({
+          packet: test_args.raw_request,
+          secret: 'wrong secret'
+        });
+      });
+
+      radius.decode({
+        packet: test_args.raw_request,
+        secret: 'wrong secret',
+        callback: function(err, decoded) {
+          test.ok( err );
+
+          test.done();
+        }
+      });
+    }
   }
 });
