@@ -1,6 +1,6 @@
 # node-radius [![Build Status](https://secure.travis-ci.org/retailnext/node-radius.png)](http://travis-ci.org/retailnext/node-radius) - A RADIUS library for node.js
 
-node-radius is a RADIUS packet encoding/decoding library for node.js written in Javascript. With node-radius you can easily decode received packets, encode packets to send, and prepare responses to received packets. node-radius supports both RADIUS authentication and RADIUS accounting packets. node-radius is designed to be fast and simple, providing both a synchronous and a callback-style asynchronous interface.
+node-radius is a RADIUS packet encoding/decoding library for node.js written in Javascript. With node-radius you can easily decode received packets, encode packets to send, and prepare responses to received packets. node-radius supports both RADIUS authentication and RADIUS accounting packets.
 
 node-radius requires node.js v0.8.0. To install node-radius, simply run `npm install radius` in your project directory.
 
@@ -58,7 +58,6 @@ decode takes as input an object with the following fields:
 
 - packet (required): a Buffer containing the raw UDP RADIUS packet (as read off a socket)
 - secret (required): a String containing the RADIUS shared secret
-- callback (optional): if provided, decode will operate asynchronously. The first argument to the callback will be an error, if any, and the second argument will be the decoded packet. If callback is not provided, decode will return the decoded packet synchronously. See the note on asynchronicity near the end of this README.
 
 Using the dictionaries available, decode parses the raw packet and yields an object representation of the packet. The object has the following fields:
 
@@ -68,19 +67,7 @@ Using the dictionaries available, decode parses the raw packet and yields an obj
 - attributes: an object containing all attributes node-radius knew how to parse. If an attribute is repeated, its value in the "attributes" object will become an Array containing each value. Unfortunately the dictionary files do not specify which attributes are repeatable, so if an attribute might be repeated then you need to check if the value in "attributes" is a scalar value or an Array.
 - raw_attributes: an array of arrays containing each raw attribute (attribute type and a Buffer containing the attribute value). This is mainly used by node-radius for generating the response packet, and would only be useful to you if you are missing relevant dictionaries and/or want to decode attributes yourself.
 
-When decoding requests (e.g. "Access-Request", "Accounting-Request"), decode will automatically verify the request authenticator and the Message-Authenticator attribute, if present. If the request doesn't check out, decode will raise an error in synchronous mode, and return an error in asynchronous mode. The error, an instance of Radius.InvalidSecretError, has a "decoded" field you can use to inspect the decoded but invalid message. The most common reason for an incorrect authenticator is using the wrong shared secret.
-
-Here is an example using the asynchronous interface to decode a packet:
-
-    radius.decode({
-      packet: raw_packet,
-      secret: shared_secret,
-      callback: function(err, decoded) {
-        if (err) throw err;
-        console.log("I got a packet!");
-        console.log(decoded);
-      }
-    });
+When decoding requests (e.g. "Access-Request", "Accounting-Request"), decode will automatically verify the request authenticator and the Message-Authenticator attribute, if present. If the request doesn't check out, decode will raise an error. The error, an instance of Radius.InvalidSecretError, has a "decoded" field you can use to inspect the decoded but invalid message. The most common reason for an incorrect authenticator is using the wrong shared secret.
 
 ### radius.encode(\<args>)
 
@@ -90,7 +77,6 @@ encode takes an object for arguments and returns a Buffer ready to be sent over 
 - secret (required): RADIUS shared secret
 - identifier (optional): packet identifer number (defaults to a random number from 0 to 255)
 - attributes (optional): RADIUS attributes you want to add to the packet
-- callback (optional): if provided, encode will operate asynchronously. The first argument to the callback will be an error, if any, and the second argument will be the encoded packet. If callback is not provided, encode will return the encoded packet synchronously. See the note on asynchronicity near the end of this README.
 - add_message_authenticator (optional): a boolean value controlling whether the library adds the Message-Authenticator HMAC to the packet. See below for more details.
 
 encode will automatically add the Message-Authenticator when:
@@ -156,23 +142,6 @@ You can specify the tag field-attribute like so (see RFC2868):
 
 If the attribute has an optional tag and you don't want to send it, then only specify the \<attribute name> and the \<attribute value>.
 
-Here is an example using the asynchronous interface, sending the encoded packet using a previously created UDP socket "dgram_socket":
-
-    radius.encode({
-      code: "Accounting-Request",
-      secret: "open-sesame",
-      attributes: [
-        ['NAS-Identifier', 'DS9'],
-        ['User-Name', 'Quark'],
-        ['User-Password', 'profit']
-      ],
-      callback: function(err, encoded) {
-        if (err) throw err;
-        dgram_socket.send(encoded, 0, encoded.length, 1813, '10.8.8.8');
-      }
-    });
-
-
 ### radius.encode\_response(\<args>)
 
 encode_response prepares a response packet based on previously received and decoded packet. "args" is an object with the following properties:
@@ -180,7 +149,6 @@ encode_response prepares a response packet based on previously received and deco
 - packet (required): the output of a previous call to radius.decode
 - code (required): String representation of the packet code ("Access-Reject, "Accounting-Response", etc)
 - attributes (optional): RADIUS attributes you want to add to the packet
-- callback (optional): if provided, encode\_response will operate asynchronously. The first argument to the callback will be an error, if any, and the second argument will be the encoded packet. If callback is not provided, encode\_response will return the encoded packet synchronously. See the note on asynchronicity near the end of this README.
 
 encode_response does a few things for you to prepare the response:
 
@@ -196,7 +164,6 @@ verify_response checks the authenticator and Message-Authenticator attribute, if
 - request (required): the request packet you previously sent (should be the raw packet, i.e. the output of a call to radius.encode)
 - response (required): the response you received to your request packet (again, the raw packet)
 - secret (required): RADIUS shared secret
-- callback (optional): if provided, verify\_response will operate asynchronously. The first argument to the callback will be an error, if any, and the second argument will be the boolean result. If callback is not provided, verify\_response will return the boolean result synchronously. See the note on asynchronicity near the end of this README.
 
 This method is useful if you are acting as the NAS. For example, if you send an "Access-Request", you can use this method to verify the response you get ("Reject" or "Accept") is legitimate.
 
@@ -277,7 +244,6 @@ Client and server examples can be found in the examples directory.
 ## Important notes:
 
 - node-radius in general does _not_ perform "higher-level" protocol validation, so for example node-radius will not complain if you encode an Access-Request packet but fail to include a NAS-IP-Address or NAS-Identifier.
-- node-radius will never block using the asynchronous, callback-style interface. Using the synchronous interface, node-radius performs two one-time, potentially blocking actions: loading the dictionaries, and generating the first random message authenticator. If you find the synchronous interface convenient, go ahead and use it. The asynchronous interface is there if you really really never want to block, not even just once on startup.
 - node-radius in general assumes most strings are UTF-8 encoded. This will work fine for ASCII and UTF-8 strings, but will not work for other encodings. At some point I might add an "encoding" option to override this default encoding, and/or a "raw" mode that just deals with Buffers (rather than Strings) when the encoding is not known.
 - node-radius does not support non-standard VSAs (where type or length field for attributes are not one octet each).
 - node-radius does not support special decoding/encoding for the following attribute types: ipv6addr, ifid, ipv6prefix, short. If node-radius encounters a type it doesn't support, node-radius will return a raw Buffer when decoding, and expect a Buffer when encoding.

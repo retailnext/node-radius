@@ -397,82 +397,7 @@ module.exports = testCase({
         test.deepEqual( expected_attrs, err.decoded.attributes );
       }
       test.done();
-    },
-
-    test_invalid_accounting_packet_authenticator_async: function(test) {
-      var raw_acct_request = test_args.raw_acct_request;
-      var expected_attrs = test_args.expected_acct_attrs;
-
-      var decode_callback = function(err, packet) {
-        test.ok( err );
-        test.deepEqual( expected_attrs, err.decoded.attributes );
-        test.done();
-      };
-
-      radius.decode({
-        packet: raw_acct_request,
-        secret: 'not-secret',
-        callback: decode_callback
-      });
     }
-  },
-
-  test_async_encode_decode: function(test) {
-    var decode_callback = function(err, decoded) {
-      test.ok( !err );
-
-      test.equal( 187, decoded.identifier );
-      test.equal( 'Access-Accept', decoded.code );
-      test.equal( 'Eurypterida-lactucerin', decoded.attributes['User-Name'] );
-
-      test.done();
-    };
-    var encode_callback = function(err, encoded) {
-      test.ok( !err );
-
-      radius.decode({ packet: encoded, secret: secret, callback: decode_callback });
-    };
-
-    radius.encode({
-      code: 'Access-Accept',
-      secret: secret,
-      identifier: 187,
-      attributes: [['User-Name', 'Eurypterida-lactucerin']],
-      callback: encode_callback
-    });
-  },
-
-  test_async_encode_response: function(test) {
-    var decoded = radius.decode({
-      packet: radius.encode({
-        code: 'Access-Request',
-        secret: secret,
-        attributes: [
-          ['User-Name', 'Italian-impale'],
-          ['User-Password', 'iambus-nondecision']
-        ]
-      }),
-      secret: secret
-    });
-
-    radius.unload_dictionaries();
-    var encode_response_cb = function(err, response) {
-      test.ok( !err );
-
-      var decoded_resp = radius.decode({ packet: response, secret: secret });
-      test.equal( 'Access-Reject', decoded_resp.code );
-      test.equal( 'unstrangulable-theoretical', decoded_resp.attributes['Reply-Message'] );
-
-      test.done();
-    };
-
-    radius.encode_response({
-      code: 'Access-Reject',
-      packet: decoded,
-      secret: secret,
-      attributes: [['Reply-Message', 'unstrangulable-theoretical']],
-      callback: encode_response_cb
-    });
   },
 
   test_no_empty_strings: function(test) {
@@ -531,28 +456,7 @@ module.exports = testCase({
     };
     test.deepEqual( expected_attrs, decoded.attributes );
 
-    // make sure it works with async loading too
-    radius.unload_dictionaries();
-
-    var encode_callback = function(err, encoded) {
-      var decode_callback = function(err, decoded) {
-        test.deepEqual( expected_attrs, decoded.attributes );
-
-        test.done();
-      };
-
-      radius.decode({
-        secret: secret,
-        packet: encoded,
-        callback: decode_callback
-      });
-    };
-    radius.encode({
-      secret: secret,
-      code: 'Access-Request',
-      attributes: [['Attribute-Test1', 'foo'], ['Attribute-Test2', 'bar']],
-      callback: encode_callback
-    });
+    test.done();
   },
 
   // make sure we can load the dicts in any order
@@ -616,60 +520,6 @@ module.exports = testCase({
 
     test.equal( 0, decoded.identifier );
     test.done();
-  },
-
-  // handle two packets quickly before dictionaries are loaded
-  test_async_dictionary_race: function(test) {
-    var expected_attrs = {
-      'NAS-IP-Address': '10.0.0.90',
-      'NAS-Port': 0,
-      'NAS-Port-Type': 'Wireless-802.11',
-      'User-Name': '7c:c5:37:ff:f8:af',
-      'User-Password': '7c:c5:37:ff:f8:af',
-      'Calling-Station-Id': '7CC537FFF8AF',
-      'Called-Station-Id': '000B86F02068',
-      'Service-Type': 'Login-User',
-      'Vendor-Specific': {
-        'Aruba-Essid-Name': 'muir-aruba-guest',
-        'Aruba-Location-Id': '00:1a:1e:c6:b0:ca',
-        'Aruba-AP-Group': 'cloud-cp'
-      },
-      'Message-Authenticator': new Buffer('f8a12329c7ed5a6e2568515243efb918', 'hex')
-    };
-
-    var raw_packet = fs.readFileSync(__dirname + '/captures/aruba_mac_auth.packet');
-
-    var attempts = 0;
-    var try_once = function() {
-      radius.add_dictionary(__dirname + '/dictionaries/dictionary.aruba');
-      radius.unload_dictionaries();
-
-      radius.decode({
-        packet: raw_packet,
-        secret: secret,
-        callback: function(err, decoded) {
-          test.deepEqual( expected_attrs, decoded.attributes );
-          attempts += 1;
-        }
-      });
-
-      radius.decode({
-        packet: raw_packet,
-        secret: secret,
-        callback: function(err, decoded) {
-          test.deepEqual( expected_attrs, decoded.attributes );
-
-          attempts += 1;
-          if (attempts == 100) {
-            test.done();
-          } else  {
-            try_once();
-          }
-        }
-      });
-    };
-
-    try_once();
   },
 
   test_date_type: function(test) {
@@ -796,43 +646,6 @@ module.exports = testCase({
     }) );
 
     test.done();
-  },
-
-  // make sure async encode/decode errors work properly
-  test_async_encode_decode_errors: function(test) {
-    radius.encode({
-      secret: secret,
-      code: 'Access-Request',
-      attributes: [
-        ['Vendor-Specific', 'life-decayed', [['Foo', 'Bar']]]
-      ],
-      callback: function(err, encoded) {
-        test.equal( null, encoded );
-        test.ok( err.message.match(/unknown vendor/) );
-
-        radius.decode({
-          secret: secret,
-          packet: new Buffer("feedway-murdrum-confriar-showmanry", "ascii"),
-          callback: function(err, decoded) {
-            test.equal( null, decoded );
-            test.ok( err.message.match(/invalid packet code/) );
-
-
-            radius.encode({
-              secret: secret,
-              identifier: 165278,
-              code: "Access-Accept",
-              callback: function(err, encoded) {
-                test.equal( null, encoded );
-                test.ok( err.message.match(/identifier too large/) );
-
-                test.done();
-              }
-            });
-          }
-        });
-      }
-    });
   },
 
   test_server_request: function(test) {
@@ -994,28 +807,7 @@ module.exports = testCase({
         secret: secret
       }) );
 
-      // async wrong Message-Authenticator
-      radius.verify_response({
-        request: test_args.raw_request,
-        response: expected_response,
-        secret: secret,
-        callback: function(err, ok) {
-          test.ifError(err);
-          test.ok( !ok );
-
-          radius.verify_response({
-            request: test_args.raw_request,
-            response: response,
-            secret: secret,
-            callback: function(err, ok) {
-              test.ifError(err);
-              test.ok( ok );
-
-              test.done();
-            }
-          });
-        }
-      });
+      test.done();
     },
 
     // response is missing Message-Authenticator, not okay
@@ -1034,17 +826,7 @@ module.exports = testCase({
         secret: secret
       }) );
 
-      radius.verify_response({
-        request: test_args.raw_request,
-        response: bad_response,
-        secret: secret,
-        callback: function(err, ok) {
-          test.ifError(err);
-          test.ok( !ok );
-
-          test.done();
-        }
-      });
+      test.done();
     },
 
     // make sure we verify Message-Authenticator when decoding requests
@@ -1056,15 +838,7 @@ module.exports = testCase({
         });
       });
 
-      radius.decode({
-        packet: test_args.raw_request,
-        secret: 'wrong secret',
-        callback: function(err, decoded) {
-          test.ok( err );
-
-          test.done();
-        }
-      });
+      test.done();
     }
   }
 });
