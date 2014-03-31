@@ -8,9 +8,9 @@
     "type": "git",
     "url": "git://github.com/nearbuy/node-radius.git"
   },
-  "engines": { "node": "0.8.x" },
+  "engines": { "node": ">=0.8.0" },
   "devDependencies": {
-    "nodeunit": "~0.7.4"
+    "nodeunit": "~0.8.6"
   },
   "scripts": {
     "test": "nodeunit test"
