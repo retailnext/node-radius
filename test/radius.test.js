@@ -562,6 +562,38 @@ module.exports = testCase({
     test.done();
   },
 
+  test_date_type_non_mult_1000_ms: function(test) {
+    var encode_f = function() {
+      var time_ms = 1403025894009;
+      var encoded = radius.encode({
+        code: 'Accounting-Request',
+        identifier: 123,
+        attributes: [
+          ['User-Name', '00-1F-3B-8C-3A-15'],
+          ['Acct-Status-Type', 'Start'],
+          ['Acct-Session-Id', '1970D5A4-001F3B8C3A15-0000000001'],
+          ['Calling-Station-Id', '00-1F-3B-8C-3A-15'],
+          ['Called-Station-Id', 'B4-C7-99-77-59-D0:muir-moto-guest-site1'],
+          ['NAS-Port', 1],
+          ['NAS-Port-Type', 'Wireless-802.11'],
+          ['NAS-IP-Address', '10.2.0.3'],
+          ['NAS-Identifier', 'ap6532-70D5A4'],
+          ['NAS-Port-Id', 'radio2'],
+          ['Event-Timestamp', new Date(time_ms)],
+          ['Tunnel-Type', 0x00, 'VLAN' ],
+          ['Tunnel-Medium-Type', 0x00, 'IEEE-802'],
+          ['Tunnel-Private-Group-Id', '30'],
+          ['Acct-Authentic', 'RADIUS']
+        ],
+        secret: secret
+      });
+    }
+    
+    test.doesNotThrow(encode_f);
+
+    test.done();
+  },
+
   test_disconnect_request: function(test) {
     var encoded = radius.encode({
       code: 'Disconnect-Request',
