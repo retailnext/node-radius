@@ -562,6 +562,26 @@ module.exports = testCase({
     test.done();
   },
 
+  test_date_type_non_mult_1000_ms: function(test) {
+    var encoded;
+    test.doesNotThrow(function() {
+      encoded = radius.encode({
+        code: 'Accounting-Request',
+        identifier: 123,
+        attributes: [
+          ['Event-Timestamp', new Date(1403025894009)]
+        ],
+        secret: secret
+      });
+    });
+
+    // truncates ms
+    var decoded = radius.decode({ packet: encoded, secret: secret });
+    test.equal( 1403025894000, decoded.attributes['Event-Timestamp'].getTime() );
+
+    test.done();
+  },
+
   test_disconnect_request: function(test) {
     var encoded = radius.encode({
       code: 'Disconnect-Request',
