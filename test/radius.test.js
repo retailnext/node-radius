@@ -860,5 +860,28 @@ module.exports = testCase({
 
       test.done();
     }
+  },
+
+  test_utf8_strings: function(test) {
+    var encoded = radius.encode({
+      secret: "密码",
+      code: "Access-Request",
+      attributes: {
+        "User-Name": "金庸先生",
+        "User-Password": "降龙十八掌"
+      }
+    });
+
+    var decoded = radius.decode({
+      packet: encoded,
+      secret: "密码"
+    });
+
+    test.deepEqual( {
+      "User-Name": "金庸先生",
+      "User-Password": "降龙十八掌"
+    }, decoded.attributes );
+
+    test.done();
   }
 });
