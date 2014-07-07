@@ -199,10 +199,10 @@ module.exports = testCase({
         ['Service-Type', 'Login-User'],
         ['Vendor-Specific', 14823, [['Aruba-Essid-Name', 'muir-aruba-guest']]],
         ['Vendor-Specific', 14823, [['Aruba-Location-Id', '00:1a:1e:c6:b0:ca']]],
-        ['Vendor-Specific', 14823, [['Aruba-AP-Group', 'cloud-cp']]],
-        ['Message-Authenticator', new Buffer('f8a12329c7ed5a6e2568515243efb918', 'hex')]
+        ['Vendor-Specific', 14823, [['Aruba-AP-Group', 'cloud-cp']]]
       ],
-      secret: secret
+      secret: secret,
+      add_message_authenticator: true
     });
 
     test.equal( raw_packet.toString('hex'), encoded.toString('hex') );
