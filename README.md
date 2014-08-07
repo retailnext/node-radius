@@ -57,8 +57,8 @@ To prepare a stand-alone packet, try this:
 decode takes as input an object with the following fields:
 
 - packet (required): a Buffer containing the raw UDP RADIUS packet (as read off a socket)
-- no_secret (optional): a boolean, if true, an instruction to not use a secret when decoding the message.  See [radius.decode_without_secret](#radiusdecode_without_secretargs).
 - secret (required, unless no_secret is true): a String containing the RADIUS shared secret
+- no_secret (optional): a boolean, if true, an instruction to not use a secret when decoding the message.  See [radius.decode_without_secret](#radiusdecode_without_secretargs).
 - callback (optional): if provided, decode will operate asynchronously. The first argument to the callback will be an error, if any, and the second argument will be the decoded packet. If callback is not provided, decode will return the decoded packet synchronously. See the note on asynchronicity near the end of this README.
 
 Using the dictionaries available, decode parses the raw packet and yields an object representation of the packet. The object has the following fields:
@@ -83,7 +83,9 @@ Here is an example using the asynchronous interface to decode a packet:
 
 ### radius.decode_without_secret(\<args>)
 
-Identical to decode, but it sets "no_secret: true" implicitly.  This can be useful to "pre-decode" a message, in order to look-up the secret to be used to properly decode the message later.
+Identical to decode, but it sets "no_secret: true" implicitly.  This can be useful to "pre-decode" a message, in order to look-up (or calculate) the secret to be used to properly decode the message later.
+
+A message decoded without a secret will not contain valid values for encrypted fields (typically passwords, etc.).
 
 ### radius.encode(\<args>)
 
