@@ -49,6 +49,38 @@ module.exports = testCase({
     test.done();
   },
 
+  test_decode_mac_auth_without_secret: function(test) {
+    var raw_packet = fs.readFileSync(__dirname + '/captures/aruba_mac_auth.packet');
+
+    radius.load_dictionary(__dirname + '/dictionaries/dictionary.aruba');
+
+    var decoded = radius.decode_without_secret({ packet: raw_packet });
+
+    test.equal( 'Access-Request', decoded.code );
+    test.equal( 58, decoded.identifier );
+    test.equal( 208, decoded.length );
+
+    var expected_attrs = {
+      'NAS-IP-Address': '10.0.0.90',
+      'NAS-Port': 0,
+      'NAS-Port-Type': 'Wireless-802.11',
+      'User-Name': '7c:c5:37:ff:f8:af',
+      'User-Password': '', // this is an encrypted field, and so cannot be read without the password
+      'Calling-Station-Id': '7CC537FFF8AF',
+      'Called-Station-Id': '000B86F02068',
+      'Service-Type': 'Login-User',
+      'Vendor-Specific': {
+        'Aruba-Essid-Name': 'muir-aruba-guest',
+        'Aruba-Location-Id': '00:1a:1e:c6:b0:ca',
+        'Aruba-AP-Group': 'cloud-cp'
+      },
+      'Message-Authenticator': new Buffer('f8a12329c7ed5a6e2568515243efb918', 'hex')
+    };
+    test.deepEqual( expected_attrs, decoded.attributes );
+
+    test.done();
+  },
+
   // make sure everthing is fine with no dictionaries
   test_decode_no_dicts: function(test) {
     var raw_packet = fs.readFileSync(__dirname + '/captures/aruba_mac_auth.packet');

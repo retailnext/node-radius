@@ -57,7 +57,8 @@ To prepare a stand-alone packet, try this:
 decode takes as input an object with the following fields:
 
 - packet (required): a Buffer containing the raw UDP RADIUS packet (as read off a socket)
-- secret (required): a String containing the RADIUS shared secret
+- secret (required, unless no_secret is true): a String containing the RADIUS shared secret
+- no_secret (optional): a boolean, if true, an instruction to not use a secret when decoding the message.  See [radius.decode_without_secret](#radiusdecode_without_secretargs).
 
 Using the dictionaries available, decode parses the raw packet and yields an object representation of the packet. The object has the following fields:
 
@@ -68,6 +69,12 @@ Using the dictionaries available, decode parses the raw packet and yields an obj
 - raw_attributes: an array of arrays containing each raw attribute (attribute type and a Buffer containing the attribute value). This is mainly used by node-radius for generating the response packet, and would only be useful to you if you are missing relevant dictionaries and/or want to decode attributes yourself.
 
 When decoding requests (e.g. "Access-Request", "Accounting-Request"), decode will automatically verify the request authenticator and the Message-Authenticator attribute, if present. If the request doesn't check out, decode will raise an error. The error, an instance of Radius.InvalidSecretError, has a "decoded" field you can use to inspect the decoded but invalid message. The most common reason for an incorrect authenticator is using the wrong shared secret.
+
+### radius.decode_without_secret(\<args>)
+
+Identical to decode, but it sets "no_secret: true" implicitly.  This can be useful to "pre-decode" a message, in order to look-up (or calculate) the secret to be used to properly decode the message later.
+
+A message decoded without a secret will not contain valid values for encrypted fields (typically passwords, etc.).
 
 ### radius.encode(\<args>)
 
