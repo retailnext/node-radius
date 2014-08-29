@@ -65,7 +65,7 @@ module.exports = testCase({
       'NAS-Port': 0,
       'NAS-Port-Type': 'Wireless-802.11',
       'User-Name': '7c:c5:37:ff:f8:af',
-      'User-Password': '', // this is an encrypted field, and so cannot be read without the password
+      'User-Password': null, // this is an encrypted field, and so cannot be read without the password
       'Calling-Station-Id': '7CC537FFF8AF',
       'Called-Station-Id': '000B86F02068',
       'Service-Type': 'Login-User',
