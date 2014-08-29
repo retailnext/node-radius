@@ -69,6 +69,12 @@ Using the dictionaries available, decode parses the raw packet and yields an obj
 
 When decoding requests (e.g. "Access-Request", "Accounting-Request"), decode will automatically verify the request authenticator and the Message-Authenticator attribute, if present. If the request doesn't check out, decode will raise an error. The error, an instance of Radius.InvalidSecretError, has a "decoded" field you can use to inspect the decoded but invalid message. The most common reason for an incorrect authenticator is using the wrong shared secret.
 
+### radius.decode_without_secret(\<args>)
+
+Identical to decode, but does not need the secret.  This can be useful to "pre-decode" a message, in order to look-up (or calculate) the secret to be used to properly decode the message later.
+
+A message decoded without a secret will contain null values for encrypted fields (typically passwords, etc.).
+
 ### radius.encode(\<args>)
 
 encode takes an object for arguments and returns a Buffer ready to be sent over the wire. The accepted arguments are:
