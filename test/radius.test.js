@@ -24,9 +24,9 @@ module.exports = testCase({
 
     var decoded = radius.decode({ packet: raw_packet, secret: secret });
 
-    test.equal( 'Access-Request', decoded.code );
-    test.equal( 58, decoded.identifier );
-    test.equal( 208, decoded.length );
+    test.equal( decoded.code, 'Access-Request' );
+    test.equal( decoded.identifier, 58 );
+    test.equal( decoded.length, 208 );
 
     var expected_attrs = {
       'NAS-IP-Address': '10.0.0.90',
@@ -44,7 +44,7 @@ module.exports = testCase({
       },
       'Message-Authenticator': new Buffer('f8a12329c7ed5a6e2568515243efb918', 'hex')
     };
-    test.deepEqual( expected_attrs, decoded.attributes );
+    test.deepEqual( decoded.attributes, expected_attrs );
 
     test.done();
   },
@@ -56,9 +56,9 @@ module.exports = testCase({
 
     var decoded = radius.decode_without_secret({ packet: raw_packet });
 
-    test.equal( 'Access-Request', decoded.code );
-    test.equal( 58, decoded.identifier );
-    test.equal( 208, decoded.length );
+    test.equal( decoded.code, 'Access-Request' );
+    test.equal( decoded.identifier, 58 );
+    test.equal( decoded.length, 208 );
 
     var expected_attrs = {
       'NAS-IP-Address': '10.0.0.90',
@@ -76,7 +76,21 @@ module.exports = testCase({
       },
       'Message-Authenticator': new Buffer('f8a12329c7ed5a6e2568515243efb918', 'hex')
     };
-    test.deepEqual( expected_attrs, decoded.attributes );
+    test.deepEqual( decoded.attributes, expected_attrs );
+
+    decoded = radius.decode({
+      secret: secret,
+      packet: radius.encode({
+        secret: secret,
+        code: "Access-Request",
+        attributes: {
+          'User-Name': 'Caenogaean-asphyxia',
+          'User-Password': 'barratry-Wertherism'
+        }
+      })
+    });
+
+    test.equal( decoded.attributes['User-Password'], 'barratry-Wertherism' );
 
     test.done();
   },
@@ -91,12 +105,12 @@ module.exports = testCase({
 
     var decoded = radius.decode({ packet: raw_packet, secret: secret });
 
-    test.equal( 'Access-Request', decoded.code );
-    test.equal( 58, decoded.identifier );
-    test.equal( 208, decoded.length );
+    test.equal( decoded.code, 'Access-Request' );
+    test.equal( decoded.identifier, 58 );
+    test.equal( decoded.length, 208 );
 
     // no pretty attributes
-    test.deepEqual( {}, decoded.attributes );
+    test.deepEqual( decoded.attributes, {} );
 
     var expected_raw_attrs = [
       [4, new Buffer([10, 0, 0, 90])],
@@ -113,7 +127,7 @@ module.exports = testCase({
       [80, new Buffer('f8a12329c7ed5a6e2568515243efb918', 'hex')]
     ];
 
-    test.deepEqual( expected_raw_attrs, decoded.raw_attributes );
+    test.deepEqual( decoded.raw_attributes, expected_raw_attrs );
 
     radius.load_dictionary = orig_load;
 
@@ -144,8 +158,8 @@ module.exports = testCase({
     });
 
     var decoded = radius.decode({ packet: packet, secret: secret });
-    test.equal( 'Access-Request', decoded.code );
-    test.equal( 123, decoded.identifier );
+    test.equal( decoded.code, 'Access-Request' );
+    test.equal( decoded.identifier, 123 );
 
     var expected_attrs = {
       'User-Name': 'ornithopter-aliptic',
@@ -158,7 +172,7 @@ module.exports = testCase({
         'Aruba-Essid-Name': 'phene-dentinalgia'
       }
     };
-    test.deepEqual( expected_attrs, decoded.attributes );
+    test.deepEqual( decoded.attributes, expected_attrs );
 
     test.done();
   },
@@ -178,9 +192,9 @@ module.exports = testCase({
     });
 
     var decoded = radius.decode({ packet: packet, secret: secret });
-    test.equal( 'Access-Request', decoded.code );
-    test.equal( 123, decoded.identifier );
-    test.deepEqual( attrs, decoded.attributes );
+    test.equal( decoded.code, 'Access-Request' );
+    test.equal( decoded.identifier, 123 );
+    test.deepEqual( decoded.attributes, attrs );
 
     test.done();
   },
@@ -237,7 +251,7 @@ module.exports = testCase({
       add_message_authenticator: true
     });
 
-    test.equal( raw_packet.toString('hex'), encoded.toString('hex') );
+    test.equal( encoded.toString('hex'), raw_packet.toString('hex') );
 
     test.done();
   },
@@ -286,7 +300,7 @@ module.exports = testCase({
     });
 
     var raw_response = fs.readFileSync(__dirname + '/captures/cisco_mac_auth_reject.packet');
-    test.equal( raw_response.toString('hex'), response.toString('hex') );
+    test.equal( response.toString('hex'), raw_response.toString('hex') );
 
     test.done();
   },
@@ -321,7 +335,7 @@ module.exports = testCase({
       [radius.attr_name_to_id('Proxy-State'), new Buffer('regretfully-unstability')]
     ];
 
-    test.deepEqual( expected_raw_attributes, decoded_response.raw_attributes );
+    test.deepEqual( decoded_response.raw_attributes, expected_raw_attributes );
 
     test.done();
   },
@@ -376,7 +390,7 @@ module.exports = testCase({
 
       var expected_attrs = test_args.expected_acct_attrs;
 
-      test.deepEqual( expected_attrs, decoded.attributes );
+      test.deepEqual( decoded.attributes, expected_attrs );
 
       // test we can encode the same packet
       var encoded = radius.encode({
@@ -426,7 +440,7 @@ module.exports = testCase({
       try {
         radius.decode({ packet: raw_acct_request, secret: 'not-secret' });
       } catch (err) {
-        test.deepEqual( expected_attrs, err.decoded.attributes );
+        test.deepEqual( err.decoded.attributes, expected_attrs );
       }
       test.done();
     }
@@ -443,7 +457,7 @@ module.exports = testCase({
     });
 
     // don't send empty strings (see RFC2865)
-    test.deepEqual( {}, decoded.attributes );
+    test.deepEqual( decoded.attributes, {} );
 
     test.done();
   },
@@ -464,7 +478,7 @@ module.exports = testCase({
     var expected_attrs = {
       'Reply-Message': ['message one', 'message two']
     };
-    test.deepEqual( expected_attrs, decoded.attributes );
+    test.deepEqual( decoded.attributes, expected_attrs );
 
     test.done();
   },
@@ -486,7 +500,7 @@ module.exports = testCase({
       'Attribute-Test1': 'foo',
       'Attribute-Test2': 'bar'
     };
-    test.deepEqual( expected_attrs, decoded.attributes );
+    test.deepEqual( decoded.attributes, expected_attrs );
 
     test.done();
   },
@@ -517,7 +531,7 @@ module.exports = testCase({
       })
     });
 
-    test.equal( 'Tunnel-Reject', decoded.attributes['Acct-Status-Type'] );
+    test.equal( decoded.attributes['Acct-Status-Type'], 'Tunnel-Reject' );
 
     radius.unload_dictionaries();
     radius.load_dictionary(__dirname + '/dictionaries/dictionary.test_tunnel_type');
@@ -535,7 +549,7 @@ module.exports = testCase({
     });
 
     var expected_attrs = {'Tunnel-Type': [0x00, 'TESTTUNNEL']};
-    test.deepEqual( expected_attrs, decoded.attributes );
+    test.deepEqual( decoded.attributes, expected_attrs );
 
     test.done();
   },
@@ -550,7 +564,7 @@ module.exports = testCase({
       secret: secret
     });
 
-    test.equal( 0, decoded.identifier );
+    test.equal( decoded.identifier, 0 );
     test.done();
   },
 
@@ -564,7 +578,7 @@ module.exports = testCase({
 
     var epoch = 1349879753;
 
-    test.equal( epoch * 1000, decoded.attributes['Event-Timestamp'].getTime() );
+    test.equal( decoded.attributes['Event-Timestamp'].getTime(), epoch * 1000 );
 
     var encoded = radius.encode({
       code: 'Accounting-Request',
@@ -589,7 +603,7 @@ module.exports = testCase({
       secret: secret
     });
 
-    test.equal( raw_packet.toString('hex'), encoded.toString('hex') );
+    test.equal( encoded.toString('hex'), raw_packet.toString('hex') );
 
     test.done();
   },
@@ -609,7 +623,7 @@ module.exports = testCase({
 
     // truncates ms
     var decoded = radius.decode({ packet: encoded, secret: secret });
-    test.equal( 1403025894000, decoded.attributes['Event-Timestamp'].getTime() );
+    test.equal( decoded.attributes['Event-Timestamp'].getTime(), 1403025894000 );
 
     test.done();
   },
@@ -636,7 +650,7 @@ module.exports = testCase({
     hasher.update(secret);
     expected_authenticator.write(hasher.digest("binary"), 0, 16, "binary");
 
-    test.equal( expected_authenticator.toString('hex'), got_authenticator.toString('hex') );
+    test.equal( got_authenticator.toString('hex'), expected_authenticator.toString('hex') );
 
     // and make sure we check the authenticator when decoding
     test.throws(function() {
@@ -764,15 +778,15 @@ module.exports = testCase({
       secret: secret
     });
 
-    test.equal( 995486, radius.vendor_name_to_id('123Foo') );
+    test.equal( radius.vendor_name_to_id('123Foo'), 995486 );
 
-    test.deepEqual( {
+    test.deepEqual( decoded.attributes, {
       'Vendor-Specific': {
         '1Integer': 478,
         '1String': 'Zollernia-fibrovasal',
         '12345': 'myrmecophagoid-harn'
       }
-    }, decoded.attributes );
+    } );
 
     test.done();
   },
@@ -805,7 +819,7 @@ module.exports = testCase({
         secret: secret
       });
 
-      test.equal( test_args.raw_request.toString('hex'), encoded.toString('hex') );
+      test.equal( encoded.toString('hex'), test_args.raw_request.toString('hex') );
 
       test.done();
     },
@@ -849,8 +863,8 @@ module.exports = testCase({
 
       var expected_ma = radius.calculate_message_authenticator(expected_response, secret);
       test.equal(
-        expected_ma.toString("hex"),
-        parsed_response.attributes["Message-Authenticator"].toString("hex")
+        parsed_response.attributes["Message-Authenticator"].toString("hex"),
+        expected_ma.toString("hex")
       );
 
       test.ok( radius.verify_response({
