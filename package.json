@@ -10,10 +10,14 @@
   },
   "engines": { "node": ">=0.8.0" },
   "devDependencies": {
-    "nodeunit": "~0.8.6"
+    "nodeunit": "~0.8.6",
+    "ip-address": "*"
   },
   "scripts": {
     "test": "nodeunit test"
   },
-  "keywords": ["radius"]
+  "keywords": ["radius"],
+  "dependencies": {
+    "ip-address": "*"
+  }
 }
