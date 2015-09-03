@@ -6,49 +6,54 @@ node-radius requires node.js v0.8.0. To install node-radius, simply run `npm ins
 
 Let's look at some examples of how to use node-radius:
 
-    var radius = require('radius');
-
-    // ... receive raw_packet from UDP socket
-
-    var decoded = radius.decode({ packet: raw_packet, secret: "shared_secret" });
+```javascript
+var radius = require('radius');
+// ... receive raw_packet from UDP socket
+var decoded = radius.decode({ packet: raw_packet, secret: "shared_secret" });
+```
 
 "decoded" might look something like this:
 
-    {
-      code: 'Access-Request',
-      identifer: 123,
-      length: 250,
-      attributes: {
-        'NAS-IP-Address': '10.1.2.3',
-        'User-Name': 'jlpicard',
-        'User-Password': 'beverly123',
-        'Vendor-Specific': {
-          'Federation-Starship': 'Enterprise'
-        }
-      }
+```javascript
+{
+  code: 'Access-Request',
+  identifer: 123,
+  length: 250,
+  attributes: {
+    'NAS-IP-Address': '10.1.2.3',
+    'User-Name': 'jlpicard',
+    'User-Password': 'beverly123',
+    'Vendor-Specific': {
+      'Federation-Starship': 'Enterprise'
     }
+  }
+}
+```
 
 To prepare your response packet, use the encode_response function:
 
-    var response = radius.encode_response({
-      packet: decoded,
-      code: "Access-Accept",
-      secret: "section31"
-    });
+```javascript
+var response = radius.encode_response({
+  packet: decoded,
+  code: "Access-Accept",
+  secret: "section31"
+});
+```
 
 To prepare a stand-alone packet, try this:
 
-    var packet = radius.encode({
-      code: "Access-Request",
-      secret: "obsidian order",
-      attributes: [
-        ['NAS-IP-Address', '10.5.5.5'],
-        ['User-Name', 'egarak'],
-        ['User-Password', 'tailoredfit'],
-        ['Vendor-Specific', 555, [['Real-Name', 'arobinson']]]
-      ]
-    });
-
+```javascript
+var packet = radius.encode({
+  code: "Access-Request",
+  secret: "obsidian order",
+  attributes: [
+    ['NAS-IP-Address', '10.5.5.5'],
+    ['User-Name', 'egarak'],
+    ['User-Password', 'tailoredfit'],
+    ['Vendor-Specific', 555, [['Real-Name', 'arobinson']]]
+  ]
+});
+```
 
 ## Method descriptions:
 
@@ -98,53 +103,65 @@ encode will not add the Message-Authenticator when:
 
 The attributes will typically be like the following (see above example):
 
-    attributes: [
-      [<attribute name>, <attribute value>],
-      ...
-    ]
+```json
+attributes: [
+  ["<attribute name>", "<attribute value>"],
+  ...
+]
+```
 
 If you don't care about attribute ordering, you can use a hash for the attributes:
 
-    attributes: {
-      <attribute name>: <attribute value>,
-      ...
-    }
+```json
+attributes: {
+  "<attribute name>": "<attribute value>",
+  ...
+}
+```
 
 If you want to send attributes that you haven't loaded a dictionary for, you can do:
 
-    attributes: [
-      [<attribute id>, <Buffer>],
-      ...
-    ]
+```json
+attributes: [
+  ["<attribute id>", "<Buffer>"],
+  ...
+]
+```
 
 Where the first item is the numeric attribute id and the second item is just a Buffer containing the value of the attribute (not including length).
 
 You can specify Vendor-Specific attributes like so:
 
-    attributes: [
-      ['Vendor-Specific', <vendor id>, [
-        [<attribute name>, <attribute value>],
-        [<attribute name>, <attribute value>]
-      ],
-      ...
-    ]
+```json
+attributes: [
+  ["Vendor-Specific", "<vendor id>", [
+    ["<attribute name>", "<attribute value>"],
+    ["<attribute name>", "<attribute value>"]
+  ],
+  ...
+]
+```
 
 Or if you want each vendor attribute as a separate attribute, try this:
 
-    attributes: [
-      ['Vendor-Specific', <vendor id>, [[<attribute name>, <attribute value>]]],
-      ['Vendor-Specific', <vendor id>, [[<attribute name>, <attribute value>]]]
-      ...
-    ]
+```json
+attributes: [
+  ["Vendor-Specific", "<vendor id>", [["<attribute name>", "<attribute value>"]]],
+  ["Vendor-Specific", "<vendor id>", [["<attribute name>", "<attribute value>"]]]
+  ...
+]
+```
 
 Like regular attributes, you can also specify the attribute id and a raw Buffer value for VSAs. If your dictionary specifies vendor attributes using the BEGIN-VENDOR/END-VENDOR format, you can use the symbolic vendor name as defined in the dictionary in place of the numeric \<vendor id>.
 
 You can specify the tag field-attribute like so (see RFC2868):
 
-    attributes: [
-      [<attribute name>, <tag number>, <attribute value>],
-      ...
-    ]
+```json
+attributes: [
+  ["<attribute name>", "<tag number>", "<attribute value>"],
+  ...
+]
+```
 
 If the attribute has an optional tag and you don't want to send it, then only specify the \<attribute name> and the \<attribute value>.
 
@@ -183,9 +200,10 @@ node-radius supports reading freeradius-style RADIUS dictionary files. node-radi
 
 To add a dictionary to be loaded, use the **add_dictionary** function:
 
-    var radius = require('radius');
-
-    radius.add_dictionary('/path/to/my/dictionary');
+```javascript
+var radius = require('radius');
+radius.add_dictionary('/path/to/my/dictionary');
+```
 
 add\_dictionary takes either a file or a directory (given a directory, it assumes everything in the directory is a dictionary file). add\_dictionary does not block or perform any IO. It simply adds the given path to a list which is used to load dictionaries later.
 
@@ -197,53 +215,55 @@ node-radius will also follow "$INCLUDE" directives inside of dictionary files (t
 
 The following is an example of a simple radius authentication server:
 
-    var radius = require('radius');
-    var dgram = require("dgram");
+```javascript
+var radius = require('radius');
+var dgram = require("dgram");
 
-    var secret = 'radius_secret';
-    var server = dgram.createSocket("udp4");
+var secret = 'radius_secret';
+var server = dgram.createSocket("udp4");
 
-    server.on("message", function (msg, rinfo) {
-      var code, username, password, packet;
-      packet = radius.decode({packet: msg, secret: secret});
+server.on("message", function (msg, rinfo) {
+  var code, username, password, packet;
+  packet = radius.decode({packet: msg, secret: secret});
 
-      if (packet.code != 'Access-Request') {
-        console.log('unknown packet type: ', packet.code);
-        return;
-      }
+  if (packet.code != 'Access-Request') {
+    console.log('unknown packet type: ', packet.code);
+    return;
+  }
 
-      username = packet.attributes['User-Name'];
-      password = packet.attributes['User-Password'];
+  username = packet.attributes['User-Name'];
+  password = packet.attributes['User-Password'];
 
-      console.log('Access-Request for ' + username);
+  console.log('Access-Request for ' + username);
 
-      if (username == 'jlpicard' && password == 'beverly123') {
-        code = 'Access-Accept';
-      } else {
-        code = 'Access-Reject';
-      }
+  if (username == 'jlpicard' && password == 'beverly123') {
+    code = 'Access-Accept';
+  } else {
+    code = 'Access-Reject';
+  }
 
-      var response = radius.encode_response({
-        packet: packet,
-        code: code,
-        secret: secret
-      });
+  var response = radius.encode_response({
+    packet: packet,
+    code: code,
+    secret: secret
+  });
 
-      console.log('Sending ' + code + ' for user ' + username);
-      server.send(response, 0, response.length, rinfo.port, rinfo.address, function(err, bytes) {
-        if (err) {
-          console.log('Error sending response to ', rinfo);
-        }
-      });
-    });
+  console.log('Sending ' + code + ' for user ' + username);
+  server.send(response, 0, response.length, rinfo.port, rinfo.address, function(err, bytes) {
+    if (err) {
+      console.log('Error sending response to ', rinfo);
+    }
+  });
+});
 
-    server.on("listening", function () {
-      var address = server.address();
-      console.log("radius server listening " +
-          address.address + ":" + address.port);
-    });
+server.on("listening", function () {
+  var address = server.address();
+  console.log("radius server listening " +
+      address.address + ":" + address.port);
+});
 
-    server.bind(1812);
+server.bind(1812);
+```
 
 Client and server examples can be found in the examples directory.
 
