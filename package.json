@@ -1,6 +1,6 @@
 {
   "name" : "radius",
-  "version" : "1.1.1",
+  "version" : "1.1.2",
   "description" : "RADIUS packet encoding/decoding",
   "author": "Nearbuy Systems <npm@nearbuysystems.com>",
   "main": "./lib/radius",
