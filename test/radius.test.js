@@ -929,5 +929,35 @@ module.exports = testCase({
     }, decoded.attributes );
 
     test.done();
+  },
+
+  test_ipv6prefix_encode: function(test) {
+    var decoded = radius.decode({
+      packet: radius.encode({
+        code: 'Access-Request',
+        authenticator: new Buffer('426edca213c1bf6e005e90a64105ca3a', 'hex'),
+        attributes: [['Framed-IPv6-Prefix', '2a05:4680:4::/64']],
+        secret: secret
+      }),
+      secret: secret
+    });
+
+    test.equal( decoded.attributes['Framed-IPv6-Prefix'], '2a05:4680:4::/64' );
+
+    // bad ipv6prefix
+    test.throws(function() {
+      var decoded = radius.decode({
+        packet: radius.encode({
+          code: 'Access-Request',
+          authenticator: new Buffer('426edca213c1bf6e005e90a64105ca3a', 'hex'),
+          attributes: [['Framed-IPv6-Prefix', new Buffer('00402')]],
+          secret: secret
+        }),
+        secret: secret
+      });
+    });
+
+    test.done();
   }
+
 });
