@@ -936,7 +936,7 @@ module.exports = testCase({
     var raw_packet      = fs.readFileSync(__dirname + '/captures/aruba_mac_auth.packet');
 
     // should fail decode packet attributes
-    test.throws( function() {
+    test.throws(function() {
       radius.decode_without_secret({ packet: invalid_packet });
     } );
 
