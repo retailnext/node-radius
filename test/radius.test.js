@@ -929,5 +929,22 @@ module.exports = testCase({
     }, decoded.attributes );
 
     test.done();
+  },
+
+  test_invalid_packet_attribute_length: function(test) {
+    var invalid_packet  = fs.readFileSync(__dirname + '/captures/invalid_register.packet');
+    var raw_packet      = fs.readFileSync(__dirname + '/captures/aruba_mac_auth.packet');
+
+    // should fail decode packet attributes
+    test.throws(function() {
+      radius.decode_without_secret({ packet: invalid_packet });
+    } );
+
+    // should decode packet attributes
+    test.doesNotThrow(function() {
+      radius.decode_without_secret({ packet: raw_packet });
+    });
+
+    test.done();
   }
 });
