@@ -8,7 +8,12 @@ var server = dgram.createSocket("udp4");
 
 server.on("message", function (msg, rinfo) {
   var code, username, password, packet;
-  packet = radius.decode({packet: msg, secret: secret});
+  try {
+    packet = radius.decode({packet: msg, secret: secret});
+  } catch (e) {
+    console.log("Failed to decode radius packet, silently dropping:", e);
+    return;
+  }
 
   if (packet.code != 'Access-Request') {
     console.log('unknown packet type: ', packet.code);
