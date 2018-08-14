@@ -946,5 +946,25 @@ module.exports = testCase({
     });
 
     test.done();
+  },
+
+  test_tag_fields: function(test) {
+    var decoded = radius.decode({
+      secret: secret,
+      packet: radius.encode({
+        code: 'Accounting-Request',
+        secret: secret,
+        attributes: [
+          ['Tunnel-Type', 0x01, 'VLAN'],
+          ['User-Name', 'honeymooner-hitched'],
+        ]
+      })
+    });
+
+    test.deepEqual( {
+      'Tunnel-Type': [ 1, 'VLAN'],
+      'User-Name': 'honeymooner-hitched'
+    }, decoded.attributes );
+    test.done();
   }
 });
