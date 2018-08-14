@@ -365,8 +365,8 @@ module.exports = testCase({
       test_args.raw_acct_request = fs.readFileSync(__dirname + '/captures/cisco_accounting.packet');
       test_args.expected_acct_attrs = {
         'User-Name': 'user_7C:C5:37:FF:F8:AF_134',
-	      'NAS-Port': 1,
-	      'NAS-IP-Address': '10.0.3.4',
+        'NAS-Port': 1,
+        'NAS-IP-Address': '10.0.3.4',
         'Framed-IP-Address': '10.2.0.252',
         'NAS-Identifier': 'Cisco 4400 (Anchor)',
         'Vendor-Specific': {
@@ -398,9 +398,9 @@ module.exports = testCase({
         identifier: decoded.identifier,
         secret: secret,
         attributes: [
-       	  ['User-Name', 'user_7C:C5:37:FF:F8:AF_134'],
-	        ['NAS-Port', 1],
-	        ['NAS-IP-Address', '10.0.3.4'],
+          ['User-Name', 'user_7C:C5:37:FF:F8:AF_134'],
+          ['NAS-Port', 1],
+          ['NAS-IP-Address', '10.0.3.4'],
           ['Framed-IP-Address', '10.2.0.252'],
           ['NAS-Identifier', 'Cisco 4400 (Anchor)'],
           ['Vendor-Specific', 'Airespace', [['Airespace-Wlan-Id', 2]]],
