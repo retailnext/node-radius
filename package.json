@@ -10,7 +10,7 @@
   },
   "engines": { "node": ">=0.8.0" },
   "devDependencies": {
-    "nodeunit": "~0.8.6"
+    "nodeunit": "0.8.8"
   },
   "scripts": {
     "test": "nodeunit test"
