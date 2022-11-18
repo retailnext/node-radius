@@ -42,7 +42,7 @@ module.exports = testCase({
         'Aruba-Location-Id': '00:1a:1e:c6:b0:ca',
         'Aruba-AP-Group': 'cloud-cp'
       },
-      'Message-Authenticator': new Buffer('f8a12329c7ed5a6e2568515243efb918', 'hex')
+      'Message-Authenticator': Buffer.from('f8a12329c7ed5a6e2568515243efb918', 'hex')
     };
     test.deepEqual( decoded.attributes, expected_attrs );
 
@@ -74,7 +74,7 @@ module.exports = testCase({
         'Aruba-Location-Id': '00:1a:1e:c6:b0:ca',
         'Aruba-AP-Group': 'cloud-cp'
       },
-      'Message-Authenticator': new Buffer('f8a12329c7ed5a6e2568515243efb918', 'hex')
+      'Message-Authenticator': Buffer.from('f8a12329c7ed5a6e2568515243efb918', 'hex')
     };
     test.deepEqual( decoded.attributes, expected_attrs );
 
@@ -113,18 +113,18 @@ module.exports = testCase({
     test.deepEqual( decoded.attributes, {} );
 
     var expected_raw_attrs = [
-      [4, new Buffer([10, 0, 0, 90])],
-      [5, new Buffer([0, 0, 0, 0])],
-      [61, new Buffer([0, 0, 0, 19])],
-      [1, new Buffer('7c:c5:37:ff:f8:af')],
-      [2, new Buffer('eb2ef7e83ec1a05e04fb5c6d91e088569a990fa2b1b2dc6a0f048596081164cd', 'hex')],
-      [31, new Buffer('7CC537FFF8AF')],
-      [30, new Buffer('000B86F02068')],
-      [6, new Buffer([0, 0, 0, 1])],
-      [26, new Buffer('000039e705126d7569722d61727562612d6775657374', 'hex')],
-      [26, new Buffer('000039e7061330303a31613a31653a63363a62303a6361', 'hex')],
-      [26, new Buffer('000039e70a0a636c6f75642d6370', 'hex')],
-      [80, new Buffer('f8a12329c7ed5a6e2568515243efb918', 'hex')]
+      [4, Buffer.from([10, 0, 0, 90])],
+      [5, Buffer.from([0, 0, 0, 0])],
+      [61, Buffer.from([0, 0, 0, 19])],
+      [1, Buffer.from('7c:c5:37:ff:f8:af', 'utf8')],
+      [2, Buffer.from('eb2ef7e83ec1a05e04fb5c6d91e088569a990fa2b1b2dc6a0f048596081164cd', 'hex')],
+      [31, Buffer.from('7CC537FFF8AF', 'utf8')],
+      [30, Buffer.from('000B86F02068', 'utf8')],
+      [6, Buffer.from([0, 0, 0, 1])],
+      [26, Buffer.from('000039e705126d7569722d61727562612d6775657374', 'hex')],
+      [26, Buffer.from('000039e7061330303a31613a31653a63363a62303a6361', 'hex')],
+      [26, Buffer.from('000039e70a0a636c6f75642d6370', 'hex')],
+      [80, Buffer.from('f8a12329c7ed5a6e2568515243efb918', 'hex')]
     ];
 
     test.deepEqual( decoded.raw_attributes, expected_raw_attrs );
@@ -233,7 +233,7 @@ module.exports = testCase({
     var encoded = radius.encode({
       code: 'Access-Request',
       identifier: 58,
-      authenticator: new Buffer('4a45fae086d9e114286b37b5f371ec6c', 'hex'),
+      authenticator: Buffer.from('4a45fae086d9e114286b37b5f371ec6c', 'hex'),
       attributes: [
         ['NAS-IP-Address', '10.0.0.90'],
         ['NAS-Port', 0],
@@ -313,9 +313,9 @@ module.exports = testCase({
         secret: secret,
         attributes: [
           ['User-Name', 'ascribe-despairer'],
-          ['Proxy-State', new Buffer('womanhouse-Pseudotsuga')],
+          ['Proxy-State', Buffer.from('womanhouse-Pseudotsuga', 'utf8')],
           ['User-Password', 'ridiculous'],
-          ['Proxy-State', new Buffer('regretfully-unstability')]
+          ['Proxy-State', Buffer.from('regretfully-unstability', 'utf8')]
         ]
       }),
       secret: secret
@@ -331,8 +331,8 @@ module.exports = testCase({
     });
 
     var expected_raw_attributes = [
-      [radius.attr_name_to_id('Proxy-State'), new Buffer('womanhouse-Pseudotsuga')],
-      [radius.attr_name_to_id('Proxy-State'), new Buffer('regretfully-unstability')]
+      [radius.attr_name_to_id('Proxy-State'), Buffer.from('womanhouse-Pseudotsuga', 'utf8')],
+      [radius.attr_name_to_id('Proxy-State'), Buffer.from('regretfully-unstability', 'utf8')]
     ];
 
     test.deepEqual( decoded_response.raw_attributes, expected_raw_attributes );
@@ -345,7 +345,7 @@ module.exports = testCase({
     var decoded = radius.decode({
       packet: radius.encode({
         code: 'Access-Request',
-        authenticator: new Buffer('426edca213c1bf6e005e90a64105ca3a', 'hex'),
+        authenticator: Buffer.from('426edca213c1bf6e005e90a64105ca3a', 'hex'),
         attributes: [['User-Password', 'ridiculous']],
         secret: secret
       }),
@@ -640,11 +640,11 @@ module.exports = testCase({
     });
 
     // check we did the non-user-password authenticator
-    var got_authenticator = new Buffer(16);
+    var got_authenticator = Buffer.alloc(16);
     encoded.copy(got_authenticator, 0, 4);
     encoded.fill(0, 4, 20);
 
-    var expected_authenticator = new Buffer(16);
+    var expected_authenticator = Buffer.alloc(16);
     var hasher = crypto.createHash("md5");
     hasher.update(encoded);
     hasher.update(secret);
@@ -734,10 +734,10 @@ module.exports = testCase({
     });
 
     // check we are doing a random authenticator
-    var got_authenticator1 = new Buffer(16);
+    var got_authenticator1 = Buffer.alloc(16);
     encoded1.copy(got_authenticator1, 0, 4);
 
-    var got_authenticator2 = new Buffer(16);
+    var got_authenticator2 = Buffer.alloc(16);
     encoded2.copy(got_authenticator2, 0, 4);
 
     test.notEqual( got_authenticator1.toString(), got_authenticator2.toString() );
@@ -839,8 +839,7 @@ module.exports = testCase({
 
       // calculate expected Message-Authenticator
 
-      var empty = new Buffer(16);
-      empty.fill(0);
+      var empty = Buffer.alloc(16);
 
       var expected_response = radius.encode({
         code: "Access-Accept",
